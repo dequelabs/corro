@@ -1,0 +1,19 @@
+{
+  "name": "corro",
+  "description": "corro",
+  "version": "0.0.1",
+  "private": true,
+  "author": {
+    "name": "Dian Fay"
+  },
+  "engines": {
+    "node": "4.1.1"
+  },
+  "dependencies": {
+    "lodash": "^3.10.1"
+  },
+  "devDependencies": {
+    "chai": "^3.3.0",
+    "mocha": "^2.3.3"
+  }
+}
