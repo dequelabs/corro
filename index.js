@@ -3,23 +3,24 @@
 var _ = require('lodash');
 
 var Corro = function () {
-  return this;
-};
+  this.rules = {
+    'required': {
+      func: function (val) { return !!val; },
+      message: 'is required'
+    },
+    'minLength': {
+      func: function (val, len) { return val && val.length >= len; },
+      message: 'is too short'
+    }
+  };
 
-Corro.prototype.rules = {
-  'required': {
-    func: function (val) { return !!val; },
-    message: 'is required'
-  },
-  'minLength': {
-    func: function (val, len) { return val && val.length >= len; },
-    message: 'is too short'
-  }
+  return this;
 };
 
 Corro.prototype.evaluateObject = function (schema, object, key) {
   var self = this;
   console.log('evaluatefield called for ' + key);
+
   var result = {};
   var addResult = function (item) {
     if (typeof item === 'string') {
@@ -33,51 +34,60 @@ Corro.prototype.evaluateObject = function (schema, object, key) {
     }
   };
 
-  // run rules first, so we can exit early if we're missing required subobjects
+  var rules = [], children = [];
   Object.keys(schema)
-    .filter(function (k) { return schema[k] && !_.isPlainObject(schema[k]); })
-    .reduce(function (acc, name) {
-      console.log('evaluating rule for object: ', object);
-      var rule = self.rules[name];
+    .filter(function (k) { return schema[k]; }) // get rid of stuff like required: false
+    .forEach(function (k) {
+      if (!_.isPlainObject(schema[k])) {
+        rules.push(k);
+      } else {
+        children.push(k);
+      }
+    });
+  console.log(rules);
+  console.log(children);
 
-      var args = [object].concat(schema[name] || []);
-      var ruleResult = rule.func.apply(self, args);
+  // run rules first, so we can exit early if we're missing required subobjects
+  rules.reduce(function (acc, name) {
+    console.log('evaluating rule for object: ', object);
+    var rule = self.rules[name];
 
-      if (!ruleResult) { acc.push(rule.message); }
+    var args = [object].concat(schema[name] || []);
+    var ruleResult = rule.func.apply(self, args);
 
-      return acc;
-    }, []).forEach(addResult);
+    if (!ruleResult) { acc.push(rule.message); }
+
+    return acc;
+  }, []).forEach(addResult);
 
   if (!_.isEmpty(result)) { return result; }
 
   // now process child objects
-  Object.keys(schema)
-    .filter(function (k) { return _.isPlainObject(schema[k]); })
-    .reduce(function (acc, name) {
-      var node = schema[name];
+  children.reduce(function (acc, name) {
+    var node = schema[name];
 
-      console.log('checking node', node);
+    console.log('checking node', node);
 
-      var subResult;
+    var subResult;
 
-      if (_.isArray(object)) {
-        console.log('object is an array');
-        subResult = object.reduce(function (arrayResult, element, idx) {
-          arrayResult.push(self.evaluateObject(node, element, key + '.' + idx));
+    if (_.isArray(object)) {
+      console.log('object is an array');
+      subResult = object.reduce(function (arrayResult, element, idx) {
+        arrayResult.push(self.evaluateObject(node, element, key + '.' + idx));
 
-          return arrayResult;
-        }, []);
-      } else {
-        console.log('object[name] = ', object[name]);
-        subResult = self.evaluateObject(node, object[name], key + '.' + name);
-      }
+        return arrayResult;
+      }, []);
+    } else {
+      console.log('object[name] = ', object[name]);
+      subResult = self.evaluateObject(node, object[name], key + '.' + name);
+    }
 
-      console.log('subresult: ', subResult);
+    console.log('subresult: ', subResult);
 
-      acc = acc.concat(subResult);
+    acc = acc.concat(subResult);
 
-      return acc;
-    }, []).forEach(addResult);
+    return acc;
+  }, []).forEach(addResult);
 
   return result;
 };
