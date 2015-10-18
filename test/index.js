@@ -26,6 +26,12 @@ describe('Corro', function () {
       assert.isTrue(result.valid);
     });
 
+    it('should not execute rules with falsey values', function () {
+      assert.isTrue(new Corro().validate({
+        field: {required: false}
+      }, {}).valid);
+    });
+
     it('should pass if all rules pass', function () {
       var result = new Corro().validate({
         field: {required: true}

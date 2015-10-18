@@ -35,7 +35,7 @@ Corro.prototype.evaluateObject = function (schema, object, key) {
 
   // run rules first, so we can exit early if we're missing required subobjects
   Object.keys(schema)
-    .filter(function (k) { return !_.isPlainObject(schema[k]); })
+    .filter(function (k) { return schema[k] && !_.isPlainObject(schema[k]); })
     .reduce(function (acc, name) {
       console.log('evaluating rule for object: ', object);
       var rule = self.rules[name];
