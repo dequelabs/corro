@@ -13,23 +13,37 @@ var evaluateObject = function (schema, object, key) {
     Object.keys(schema).reduce(function (acc, name) {
       var node = schema[name];
 
+      console.log('checking node', node);
+
       // if it's an object, that's describing a subschema. try to recurse
       if (_.isPlainObject(node)) {
-          console.log('node is a subobject');
-          if (_.isObject(object)) {
-              console.log('object[name] = ', object[name]);
-              var subResult = evaluateObject(node, object[name], key + '.' + name);
-              console.log('subresult: ', subResult);
-              acc = acc.concat(subResult);
-          } else {
-              acc.push('schema mismatch');
-          }
+        console.log('node is a subobject');
+
+        var subResult;
+
+        if (_.isArray(object)) {
+          console.log('object is an array');
+          subResult = object.reduce(function (arrayResult, element, idx) {
+            arrayResult.push(evaluateObject(node, element, key + '.' + idx));
+
+            return arrayResult;
+          }, []);
+          console.log('subresult: ', subResult);
+          acc = acc.concat(subResult);
+        } else if (_.isObject(object)) {
+          console.log('object[name] = ', object[name]);
+          subResult = evaluateObject(node, object[name], key + '.' + name);
+          console.log('subresult: ', subResult);
+          acc = acc.concat(subResult);
+        } else {
+            acc.push('schema mismatch');
+        }
       } else {
-          console.log('evaluating required for object: ', object);
-          // fake out rules here for now
-          if (name === 'required' && (object === null || object === undefined)) {
-            acc.push('is required');
-          }
+        console.log('node is a rule, evaluating for object: ', object);
+        // fake out rules here for now
+        if (name === 'required' && (object === null || object === undefined)) {
+          acc.push('is required');
+        }
       }
 
       return acc;

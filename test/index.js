@@ -88,5 +88,46 @@ describe('Corro', function () {
         }, {obj: 'good luck walking down this'}).valid);
       });
     });
+
+    describe('recursion into array elements', function () {
+      it('should validate objects in arrays', function () {
+        var result = Corro.validate({
+          array: {
+            required: true,
+            // minLength: 5, etc
+            values: {required: true}
+          }
+        }, {array: ['one', 'two', null]});
+
+        assert.isFalse(result.valid);
+        assert.lengthOf(result.errors['array.2'], 1);
+      });
+
+      it('should stop gracefully and fail for nulls', function () {
+        var result = Corro.validate({
+          array: {
+            required: true,
+            // minLength: 5, etc
+            values: {required: true}
+          }
+        }, {array: null});
+
+        assert.isFalse(result.valid);
+        assert.lengthOf(result.errors.array, 1);  // currently fails because it returns both a schema mismatch and a required violation. revisit once rules refactored
+      });
+
+      it('should stop gracefully and fail for wrong types', function () {
+        var result = Corro.validate({
+          array: {
+            required: true,
+            // minLength: 5, etc
+            values: {required: true}
+          }
+        }, {array: 'this is not an array'});
+
+        assert.isFalse(result.valid);
+        assert.lengthOf(result.errors.array, 1);
+      });
+    });
 	});
 });
