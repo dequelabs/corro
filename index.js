@@ -11,7 +11,6 @@ var Corro = function (rules) {
     return customRule;
   });
 
-  console.log(Object.keys(this.rules).length);
   return this;
 };
 
