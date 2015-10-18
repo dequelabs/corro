@@ -9,55 +9,60 @@ var Corro = function () {
 var evaluateObject = function (schema, object, key) {
     console.log('evaluatefield called for ' + key);
     var result = {};
+    var addResult = function (item) {
+      if (typeof item === 'string') {
+        if (!result[key]) { result[key] = []; }
 
-    Object.keys(schema).reduce(function (acc, name) {
+        result[key].push(item);
+      } else {
+        Object.keys(item).forEach(function (k) {
+          result[k] = item[k];
+        });
+      }
+    };
+
+    var rules = Object.keys(schema).filter(function (k) { return !_.isPlainObject(schema[k]); });
+
+    // run rules first, so we can exit early if we're missing required subobjects
+    rules.reduce(function (acc, name) {
+      console.log('evaluating rule for object: ', object);
+      // fake out rules here for now
+      if (name === 'required' && (object === null || object === undefined)) {
+        acc.push('is required');
+      }
+
+      return acc;
+    }, []).forEach(addResult);
+
+    if (!_.isEmpty(result)) { return result; }
+
+    var children = Object.keys(schema).filter(function (k) { return _.isPlainObject(schema[k]); });
+
+    children.reduce(function (acc, name) {
       var node = schema[name];
 
       console.log('checking node', node);
 
-      // if it's an object, that's describing a subschema. try to recurse
-      if (_.isPlainObject(node)) {
-        console.log('node is a subobject');
+      var subResult;
 
-        var subResult;
+      if (_.isArray(object)) {
+        console.log('object is an array');
+        subResult = object.reduce(function (arrayResult, element, idx) {
+          arrayResult.push(evaluateObject(node, element, key + '.' + idx));
 
-        if (_.isArray(object)) {
-          console.log('object is an array');
-          subResult = object.reduce(function (arrayResult, element, idx) {
-            arrayResult.push(evaluateObject(node, element, key + '.' + idx));
-
-            return arrayResult;
-          }, []);
-          console.log('subresult: ', subResult);
-          acc = acc.concat(subResult);
-        } else if (_.isObject(object)) {
-          console.log('object[name] = ', object[name]);
-          subResult = evaluateObject(node, object[name], key + '.' + name);
-          console.log('subresult: ', subResult);
-          acc = acc.concat(subResult);
-        } else {
-            acc.push('schema mismatch');
-        }
+          return arrayResult;
+        }, []);
+        console.log('subresult: ', subResult);
+        acc = acc.concat(subResult);
       } else {
-        console.log('node is a rule, evaluating for object: ', object);
-        // fake out rules here for now
-        if (name === 'required' && (object === null || object === undefined)) {
-          acc.push('is required');
-        }
+        console.log('object[name] = ', object[name]);
+        subResult = evaluateObject(node, object[name], key + '.' + name);
+        console.log('subresult: ', subResult);
+        acc = acc.concat(subResult);
       }
 
       return acc;
-  }, []).forEach(function (item) {
-    if (typeof item === 'string') {
-      if (!result[key]) { result[key] = []; }
-
-      result[key].push(item);
-    } else {
-      Object.keys(item).forEach(function (k) {
-        result[k] = item[k];
-      });
-    }
-  });
+  }, []).forEach(addResult);
 
   return result;
 };

@@ -113,7 +113,7 @@ describe('Corro', function () {
         }, {array: null});
 
         assert.isFalse(result.valid);
-        assert.lengthOf(result.errors.array, 1);  // currently fails because it returns both a schema mismatch and a required violation. revisit once rules refactored
+        assert.lengthOf(result.errors.array, 1);
       });
 
       it('should stop gracefully and fail for wrong types', function () {
@@ -126,7 +126,7 @@ describe('Corro', function () {
         }, {array: 'this is not an array'});
 
         assert.isFalse(result.valid);
-        assert.lengthOf(result.errors.array, 1);
+        assert.lengthOf(result.errors['array.values'], 1);
       });
     });
 	});
