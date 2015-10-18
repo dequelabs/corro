@@ -132,7 +132,36 @@ describe('Corro', function () {
     });
 
     describe('recursion into array elements', function () {
-      it('should validate objects in arrays', function () {
+      it('should pass arrays where all simple values conform', function () {
+        var result = new Corro().validate({
+          array: {
+            required: true,
+            // minLength: 5, etc
+            values: {required: true}
+          }
+        }, {array: ['one', 'two']});
+
+        assert.isTrue(result.valid);
+      });
+
+      it('should pass arrays where all complex values conform', function () {
+        var result = new Corro().validate({
+          array: {
+            required: true,
+            // minLength: 5, etc
+            values: {
+              required: true,
+              field: {
+                required: true
+              }
+            }
+          }
+        }, {array: [{field: 'value'}]});
+
+        assert.isTrue(result.valid);
+      });
+
+      it('should fail individual nonconforming elements', function () {
         var result = new Corro().validate({
           array: {
             required: true,
@@ -143,6 +172,24 @@ describe('Corro', function () {
 
         assert.isFalse(result.valid);
         assert.lengthOf(result.errors['array.2'], 1);
+      });
+
+      it('should fail individual nonconforming complex elements', function () {
+        var result = new Corro().validate({
+          array: {
+            required: true,
+            // minLength: 5, etc
+            values: {
+              required: true,
+              field: {
+                required: true
+              }
+            }
+          }
+        }, {array: [{notfield: 'value'}]});
+
+        assert.isFalse(result.valid);
+        assert.lengthOf(result.errors['array.0.field'], 1);
       });
 
       it('should stop gracefully and fail for nulls', function () {
