@@ -63,7 +63,7 @@ describe('Corro', function () {
 
         assert.isFalse(result.valid);
         assert.lengthOf(Object.keys(result.errors), 1);
-        assert.isOk(result.errors['obj.field']);
+        assert.isOk(result.errors['obj.field.subfield']);
       });
 
       it('should stop gracefully and fail for nulls', function () {
