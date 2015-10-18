@@ -4,6 +4,32 @@ var assert = require('chai').assert;
 var Corro = require('../index.js');
 
 describe('Corro', function () {
+  describe('ctor', function () {
+    it('should add custom rules', function () {
+      var c = new Corro({
+        myRule: {
+          func: function (val) { return typeof val === 'number' && val > 10; },
+          message: 'hello!'
+        }
+      });
+
+      assert.lengthOf(Object.keys(c.rules), 3);
+      assert.equal(c.rules.myRule.message, 'hello!');
+    });
+
+    it('should allow overrides', function () {
+      var c = new Corro({
+        required: {
+          func: function (val) { return !!val; },
+          message: 'hello!'
+        }
+      });
+
+      assert.lengthOf(Object.keys(c.rules), 2);
+      assert.equal(c.rules.required.message, 'hello!');
+    });
+  });
+
   describe('validate', function () {
     it('should be a function', function () {
       assert.isFunction(new Corro().validate);

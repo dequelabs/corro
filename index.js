@@ -1,19 +1,17 @@
 'use strict';
 
 var _ = require('lodash');
+var defaults = require('./lib/rules');
 
-var Corro = function () {
-  this.rules = {
-    'required': {
-      func: function (val) { return !!val; },
-      message: 'is required'
-    },
-    'minLength': {
-      func: function (val, len) { return val && val.length >= len; },
-      message: 'is too short'
-    }
-  };
+var Corro = function (rules) {
+  console.log('ctor');
+  this.rules = rules || {};
 
+  _.merge(this.rules, defaults, function (customRule) { // 2nd param is defaultRule but we always go with custom
+    return customRule;
+  });
+
+  console.log(Object.keys(this.rules).length);
   return this;
 };
 
@@ -36,7 +34,7 @@ Corro.prototype.evaluateObject = function (schema, object, key) {
 
   var rules = [], children = [];
   Object.keys(schema)
-    .filter(function (k) { return schema[k]; }) // get rid of stuff like required: false
+    .filter(function (k) { return schema[k]; }) // skip stuff like required: false
     .forEach(function (k) {
       if (!_.isPlainObject(schema[k])) {
         rules.push(k);
