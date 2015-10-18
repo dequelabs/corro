@@ -13,7 +13,7 @@ describe('Corro', function () {
       var result = Corro.validate({}, {});
 
       assert.isTrue(result.valid);
-      assert.lengthOf(result.errors, 0);
+      assert.lengthOf(Object.keys(result.errors), 0);
     });
 
     it('should pass if all rules pass', function () {
@@ -24,7 +24,7 @@ describe('Corro', function () {
       });
 
       assert.isTrue(result.valid);
-      assert.lengthOf(result.errors, 0);
+      assert.lengthOf(Object.keys(result.errors), 0);
     });
 
     it('should return errors if rules fail', function () {
@@ -33,7 +33,7 @@ describe('Corro', function () {
       }, {});
 
       assert.isFalse(result.valid);
-      assert.lengthOf(result.errors, 1);
+      assert.lengthOf(Object.keys(result.errors), 1);
     });
 
     describe('recursion into object trees', function () {
@@ -53,18 +53,21 @@ describe('Corro', function () {
           obj: {
             required: true,
             field: {
-              required: true
+              required: true,
+              subfield: {
+                required: true
+              }
             }
           }
-        }, {obj: {}});
+        }, {obj: {field: {}}});
 
         assert.isFalse(result.valid);
-        assert.lengthOf(result.errors, 1);
-        assert.isNotNull(result.errors['obj.field']);
+        assert.lengthOf(Object.keys(result.errors), 1);
+        assert.isOk(result.errors['obj.field']);
       });
 
-      it('should stop gracefully for nulls', function () {
-        assert.isTrue(Corro.validate({
+      it('should stop gracefully and fail for nulls', function () {
+        assert.isFalse(Corro.validate({
           obj: {
             required: true,
             field: {
@@ -74,8 +77,8 @@ describe('Corro', function () {
         }, {obj: null}).valid);
       });
 
-      it('should stop gracefully for wrong types', function () {
-        assert.isTrue(Corro.validate({
+      it('should stop gracefully and fail for wrong types', function () {
+        assert.isFalse(Corro.validate({
           obj: {
             required: true,
             field: {

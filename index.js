@@ -6,34 +6,68 @@ var Corro = function () {
   return this;
 };
 
-Corro.prototype.validate = function (schema, obj) {
-  var result = Object.keys(schema).reduce(function (result, key) {
-    var ruleset = schema[key];
-    var field = obj[key];
+var evaluateObject = function (ruleset, object, key) {
+    console.log('evaluatefield called for ' + key);
+    var result = {};
 
-    // apply each rule in the corresponding ruleset definition to field
-    var ruleResult = Object.keys(ruleset).reduce(function (acc, name) {
-      var rule = ruleset[name];
+    Object.keys(ruleset).reduce(function (acc, name) {
+      var node = ruleset[name];
 
-      if (name === 'required' && (field === null || field === undefined)) {
-        acc[key] = 'is required';
+      // if it's an object, that's describing a subschema. try to recurse
+      if (_.isPlainObject(node)) {
+          console.log('node is a subobject');
+          if (_.isObject(object)) {
+              console.log('object[name] = ', object[name]);
+              var subResult = evaluateObject(node, object[name], key + '.' + name);
+              console.log('subresult: ', subResult);
+              acc = acc.concat(subResult);
+          } else {
+              acc.push('schema mismatch');
+          }
+      } else {
+          console.log('evaluating required for object: ', object);
+          // fake out rules here for now
+          if (name === 'required' && (object === null || object === undefined)) {
+            acc.push('is required');
+          }
       }
 
       return acc;
-    }, {});
+  }, []).forEach(function (item) {
+    if (typeof item === 'string') {
+      if (!result[key]) { result[key] = []; }
 
-    if (!_.isEmpty(ruleResult)) {
+      result[key].push(item);
+    } else {
+      Object.keys(item).forEach(function (k) {
+        result[k] = item[k];
+      });
+    }
+  });
+
+  return result;
+};
+
+Corro.prototype.validate = function (schema, obj) {
+  var result = Object.keys(schema).reduce(function (result, key) {
+    // apply each rule in the corresponding ruleset definition to the field
+    var nodeResult = {};
+    nodeResult[key] = evaluateObject(schema[key], obj[key], key);
+
+    if (!_.isEmpty(nodeResult[key])) {
       result.valid = false;
-      result.errors.push(ruleResult);
+      //result.errors.push(nodeResult);
+
+      result.errors = _.merge(result.errors, nodeResult);
     }
 
     return result;
   }, {
     valid: true,
-    errors: []
+    errors: {}
   });
 
-  console.log(result);
+  console.log(JSON.stringify(result));
 
   return result;
 };
