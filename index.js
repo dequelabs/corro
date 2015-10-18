@@ -6,79 +6,80 @@ var Corro = function () {
   return this;
 };
 
-var evaluateObject = function (schema, object, key) {
-    console.log('evaluatefield called for ' + key);
-    var result = {};
-    var addResult = function (item) {
-      if (typeof item === 'string') {
-        if (!result[key]) { result[key] = []; }
+Corro.prototype.rules = {
+  'required': {
+    func: function (val) { return !!val; },
+    message: 'is required'
+  }
+};
 
-        result[key].push(item);
-      } else {
-        Object.keys(item).forEach(function (k) {
-          result[k] = item[k];
-        });
-      }
-    };
+Corro.prototype.evaluateObject = function (schema, object, key) {
+  var self = this;
+  console.log('evaluatefield called for ' + key);
+  var result = {};
+  var addResult = function (item) {
+    if (typeof item === 'string') {
+      if (!result[key]) { result[key] = []; }
 
-    var rules = Object.keys(schema).filter(function (k) { return !_.isPlainObject(schema[k]); });
+      result[key].push(item);
+    } else {
+      Object.keys(item).forEach(function (k) {
+        result[k] = item[k];
+      });
+    }
+  };
 
-    // run rules first, so we can exit early if we're missing required subobjects
-    rules.reduce(function (acc, name) {
+  // run rules first, so we can exit early if we're missing required subobjects
+  Object.keys(schema)
+    .filter(function (k) { return !_.isPlainObject(schema[k]); })
+    .reduce(function (acc, name) {
       console.log('evaluating rule for object: ', object);
-      // fake out rules here for now
-      if (name === 'required' && (object === null || object === undefined)) {
-        acc.push('is required');
-      }
+
+      var ruleResult = self.rules[name].func(object);
+
+      if (!ruleResult) { acc.push(self.rules[name].message); }
 
       return acc;
     }, []).forEach(addResult);
 
-    if (!_.isEmpty(result)) { return result; }
+  if (!_.isEmpty(result)) { return result; }
 
-    var children = Object.keys(schema).filter(function (k) { return _.isPlainObject(schema[k]); });
+  var children = Object.keys(schema).filter(function (k) { return _.isPlainObject(schema[k]); });
 
-    children.reduce(function (acc, name) {
-      var node = schema[name];
+  children.reduce(function (acc, name) {
+    var node = schema[name];
 
-      console.log('checking node', node);
+    console.log('checking node', node);
 
-      var subResult;
+    var subResult;
 
-      if (_.isArray(object)) {
-        console.log('object is an array');
-        subResult = object.reduce(function (arrayResult, element, idx) {
-          arrayResult.push(evaluateObject(node, element, key + '.' + idx));
+    if (_.isArray(object)) {
+      console.log('object is an array');
+      subResult = object.reduce(function (arrayResult, element, idx) {
+        arrayResult.push(self.evaluateObject(node, element, key + '.' + idx));
 
-          return arrayResult;
-        }, []);
-        console.log('subresult: ', subResult);
-        acc = acc.concat(subResult);
-      } else {
-        console.log('object[name] = ', object[name]);
-        subResult = evaluateObject(node, object[name], key + '.' + name);
-        console.log('subresult: ', subResult);
-        acc = acc.concat(subResult);
-      }
+        return arrayResult;
+      }, []);
+      console.log('subresult: ', subResult);
+      acc = acc.concat(subResult);
+    } else {
+      console.log('object[name] = ', object[name]);
+      subResult = self.evaluateObject(node, object[name], key + '.' + name);
+      console.log('subresult: ', subResult);
+      acc = acc.concat(subResult);
+    }
 
-      return acc;
+    return acc;
   }, []).forEach(addResult);
 
   return result;
 };
 
 Corro.prototype.validate = function (schema, obj) {
-  /*var errors = evaluateObject(schema, obj);
-
-  console.log(errors);
-
-  return {
-    valid: errors.length > 0,
-    errors: errors
-  };*/
+  var self = this;
   var result = Object.keys(schema).reduce(function (acc, key) {
     // apply each rule in the corresponding ruleset definition to the field
-    var nodeResult = evaluateObject(schema[key], obj[key], key);
+    var nodeResult = self.evaluateObject(schema[key], obj[key], key);
 
     if (!_.isEmpty(nodeResult)) {
       acc.valid = false;
@@ -97,4 +98,4 @@ Corro.prototype.validate = function (schema, obj) {
   return result;
 };
 
-exports = module.exports = new Corro();
+exports = module.exports = Corro;

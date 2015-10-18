@@ -6,18 +6,18 @@ var Corro = require('../index.js');
 describe('Corro', function () {
   describe('validate', function () {
     it('should be a function', function () {
-      assert.isFunction(Corro.validate);
+      assert.isFunction(new Corro().validate);
     });
 
     it('should return a validation result', function () {
-      var result = Corro.validate({}, {});
+      var result = new Corro().validate({}, {});
 
       assert.isTrue(result.valid);
       assert.lengthOf(Object.keys(result.errors), 0);
     });
 
     it('should pass if all rules pass', function () {
-      var result = Corro.validate({
+      var result = new Corro().validate({
         field: {required: true}
       }, {
         field: 'value'
@@ -28,7 +28,7 @@ describe('Corro', function () {
     });
 
     it('should return errors if rules fail', function () {
-      var result = Corro.validate({
+      var result = new Corro().validate({
         field: {required: true}
       }, {});
 
@@ -38,7 +38,7 @@ describe('Corro', function () {
 
     describe('recursion into object trees', function () {
       it('should validate nested objects', function () {
-        assert.isTrue(Corro.validate({
+        assert.isTrue(new Corro().validate({
           obj: {
             required: true,
             field: {
@@ -49,7 +49,7 @@ describe('Corro', function () {
       });
 
       it('should return an error if a problem is found deeper in the tree', function () {
-        var result = Corro.validate({
+        var result = new Corro().validate({
           obj: {
             required: true,
             field: {
@@ -67,7 +67,7 @@ describe('Corro', function () {
       });
 
       it('should stop gracefully and fail for nulls', function () {
-        assert.isFalse(Corro.validate({
+        assert.isFalse(new Corro().validate({
           obj: {
             required: true,
             field: {
@@ -78,7 +78,7 @@ describe('Corro', function () {
       });
 
       it('should stop gracefully and fail for wrong types', function () {
-        assert.isFalse(Corro.validate({
+        assert.isFalse(new Corro().validate({
           obj: {
             required: true,
             field: {
@@ -91,7 +91,7 @@ describe('Corro', function () {
 
     describe('recursion into array elements', function () {
       it('should validate objects in arrays', function () {
-        var result = Corro.validate({
+        var result = new Corro().validate({
           array: {
             required: true,
             // minLength: 5, etc
@@ -104,7 +104,7 @@ describe('Corro', function () {
       });
 
       it('should stop gracefully and fail for nulls', function () {
-        var result = Corro.validate({
+        var result = new Corro().validate({
           array: {
             required: true,
             // minLength: 5, etc
@@ -117,7 +117,7 @@ describe('Corro', function () {
       });
 
       it('should stop gracefully and fail for wrong types', function () {
-        var result = Corro.validate({
+        var result = new Corro().validate({
           array: {
             required: true,
             // minLength: 5, etc
