@@ -16,6 +16,16 @@ describe('Corro', function () {
       assert.lengthOf(Object.keys(result.errors), 0);
     });
 
+    it('should pass arg values to rules', function () {
+      var result = new Corro().validate({
+        field: {minLength: 10}
+      }, {
+        field: 'this is longer than ten characters'
+      });
+
+      assert.isTrue(result.valid);
+    });
+
     it('should pass if all rules pass', function () {
       var result = new Corro().validate({
         field: {required: true}
