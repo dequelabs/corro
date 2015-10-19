@@ -76,6 +76,36 @@ describe('rules', function () {
     });
   });
 
+  describe('max', function () {
+    var rule = rules.max.func;
+
+    it('should pass numbers meeting the requirement', function () {
+      assert.isTrue(rule(3, 3));
+    });
+
+    it('should parse strings', function () {
+      assert.isTrue(rule('3', 3));
+    });
+
+    it('should pass nulls', function () {
+      assert.isTrue(rule(null, 4));
+    });
+
+    it('should pass undefined', function () {
+      assert.isTrue(rule(undefined, 4));
+    });
+
+    it('should fail numbers which do not meet the requirement', function () {
+      assert.isFalse(rule(4, 3));
+    });
+
+    it('should fail non-numeric values', function () {
+      assert.isFalse(rule('hello', 2));
+      assert.isFalse(rule([1, 2, 3], 2));
+      assert.isFalse(rule({field: 'value'}, 2));
+    });
+  });
+
   describe('maxLength', function () {
     var rule = rules.maxLength.func;
 
@@ -95,16 +125,46 @@ describe('rules', function () {
       assert.isTrue(rule(undefined, 4));
     });
 
-    it('should fail strings which do not the requirement', function () {
+    it('should fail strings which do not meet the requirement', function () {
       assert.isFalse(rule('abc', 2));
     });
 
-    it('should fail arrays which do not the requirement', function () {
+    it('should fail arrays which do not meet the requirement', function () {
       assert.isFalse(rule([1, 2, 3], 2));
     });
 
     it('should fail values without a length property', function () {
       assert.isFalse(rule({}, 4));
+    });
+  });
+
+  describe('min', function () {
+    var rule = rules.min.func;
+
+    it('should pass numbers meeting the requirement', function () {
+      assert.isTrue(rule(3, 3));
+    });
+
+    it('should parse strings', function () {
+      assert.isTrue(rule('3', 3));
+    });
+
+    it('should pass nulls', function () {
+      assert.isTrue(rule(null, 4));
+    });
+
+    it('should pass undefined', function () {
+      assert.isTrue(rule(undefined, 4));
+    });
+
+    it('should fail numbers which do not meet the requirement', function () {
+      assert.isFalse(rule(2, 3));
+    });
+
+    it('should fail non-numeric values', function () {
+      assert.isFalse(rule('hello', 2));
+      assert.isFalse(rule([1, 2, 3], 2));
+      assert.isFalse(rule({field: 'value'}, 2));
     });
   });
 
@@ -127,11 +187,11 @@ describe('rules', function () {
       assert.isTrue(rule(undefined, 4));
     });
 
-    it('should fail strings which do not the requirement', function () {
+    it('should fail strings which do not meet the requirement', function () {
       assert.isFalse(rule('abc', 4));
     });
 
-    it('should fail arrays which do not the requirement', function () {
+    it('should fail arrays which do not meet the requirement', function () {
       assert.isFalse(rule([1, 2, 3], 4));
     });
 
