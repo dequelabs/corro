@@ -5,268 +5,222 @@ var rules = require('../../lib/rules.js');
 
 describe('rules', function () {
   describe('required', function () {
-    var rule = rules.required.func;
+    var rule = rules.required;
+
+    it('should evaluate null and undefined values', function () {
+      assert.isTrue(rule.evaluateNull);
+      assert.isTrue(rule.evaluateUndefined);
+    });
 
     it('should pass true', function () {
-      assert.isTrue(rule(true));
+      assert.isTrue(rule.func(true));
     });
 
     it('should pass false', function () {
-      assert.isTrue(rule(false));
+      assert.isTrue(rule.func(false));
     });
 
     it('should pass strings', function () {
-      assert.isTrue(rule('hello'));
+      assert.isTrue(rule.func('hello'));
     });
 
     it('should pass numbers', function () {
-      assert.isTrue(rule(123));
+      assert.isTrue(rule.func(123));
     });
 
     it('should pass objects', function () {
-      assert.isTrue(rule({field: 'value'}));
+      assert.isTrue(rule.func({field: 'value'}));
     });
 
     it('should pass arrays', function () {
-      assert.isTrue(rule([1, 2, 3]));
+      assert.isTrue(rule.func([1, 2, 3]));
     });
 
     it('should fail nulls', function () {
-      assert.isFalse(rule(null));
+      assert.isFalse(rule.func(null));
     });
 
     it('should fail undefined', function () {
-      assert.isFalse(rule(undefined));
+      assert.isFalse(rule.func(undefined));
     });
 	});
 
   describe('match', function () {
-    var rule = rules.match.func;
+    var rule = rules.match;
 
     it('should pass content matching a regex', function () {
-      assert.isTrue(rule('bloop', /b[lw]o+p/));
+      assert.isTrue(rule.func('bloop', /b[lw]o+p/));
     });
 
     it('should fail content not matching a regex', function () {
-      assert.isFalse(rule('bloop', /b[lw]op/));
+      assert.isFalse(rule.func('bloop', /b[lw]op/));
     });
 
     it('should match anywhere in the string (barring anchors)', function () {
-      assert.isTrue(rule('bloop', /o+/));
+      assert.isTrue(rule.func('bloop', /o+/));
     });
 
     it('should coerce numbers to strings', function () {
-      assert.isTrue(rule(1234, /\d+/));
+      assert.isTrue(rule.func(1234, /\d+/));
     });
 
-    it('should fail objects', function () {
-      assert.isFalse(rule({field: 'value'}, /object/)); // test against what it would toString() as
-    });
-
-    it('should fail arrays', function () {
-      assert.isFalse(rule(['abc'], /abc/));
-    });
-
-    it('should pass null values', function () {
-      assert.isTrue(rule(null, /o+/));
-    });
-
-    it('should pass undefined values', function () {
-      assert.isTrue(rule(undefined, /o+/));
+    it('should not throw if horribly misused', function () {
+      assert.doesNotThrow(function () { rule.func({field: 'value'}, /obj/); });
+      assert.doesNotThrow(function () { rule.func(['abc'], /abc/); });
+      assert.doesNotThrow(function () { rule.func(true, /abc/); });
     });
   });
 
   describe('max', function () {
-    var rule = rules.max.func;
+    var rule = rules.max;
 
     it('should pass numbers meeting the requirement', function () {
-      assert.isTrue(rule(3, 3));
+      assert.isTrue(rule.func(3, 3));
     });
 
     it('should parse strings', function () {
-      assert.isTrue(rule('3', 3));
-    });
-
-    it('should pass nulls', function () {
-      assert.isTrue(rule(null, 4));
-    });
-
-    it('should pass undefined', function () {
-      assert.isTrue(rule(undefined, 4));
+      assert.isTrue(rule.func('3', 3));
     });
 
     it('should fail numbers which do not meet the requirement', function () {
-      assert.isFalse(rule(4, 3));
+      assert.isFalse(rule.func(4, 3));
     });
 
     it('should fail non-numeric values', function () {
-      assert.isFalse(rule('hello', 2));
-      assert.isFalse(rule([1, 2, 3], 2));
-      assert.isFalse(rule({field: 'value'}, 2));
+      assert.isFalse(rule.func(true, 2));
+      assert.isFalse(rule.func('hello', 2));
+      assert.isFalse(rule.func([1, 2, 3], 2));
+      assert.isFalse(rule.func({field: 'value'}, 2));
     });
   });
 
   describe('maxLength', function () {
-    var rule = rules.maxLength.func;
+    var rule = rules.maxLength;
 
     it('should pass strings meeting the requirement', function () {
-      assert.isTrue(rule('abc', 3));
+      assert.isTrue(rule.func('abc', 3));
     });
 
     it('should pass arrays meeting the requirement', function () {
-      assert.isTrue(rule([1, 2, 3], 3));
-    });
-
-    it('should pass nulls', function () {
-      assert.isTrue(rule(null, 4));
-    });
-
-    it('should pass undefined', function () {
-      assert.isTrue(rule(undefined, 4));
+      assert.isTrue(rule.func([1, 2, 3], 3));
     });
 
     it('should fail strings which do not meet the requirement', function () {
-      assert.isFalse(rule('abc', 2));
+      assert.isFalse(rule.func('abc', 2));
     });
 
     it('should fail arrays which do not meet the requirement', function () {
-      assert.isFalse(rule([1, 2, 3], 2));
+      assert.isFalse(rule.func([1, 2, 3], 2));
     });
 
     it('should fail values without a length property', function () {
-      assert.isFalse(rule({}, 4));
+      assert.isFalse(rule.func({}, 4));
+      assert.isFalse(rule.func(1, 4));
+      assert.isFalse(rule.func(true, 4));
     });
   });
 
   describe('min', function () {
-    var rule = rules.min.func;
+    var rule = rules.min;
 
     it('should pass numbers meeting the requirement', function () {
-      assert.isTrue(rule(3, 3));
+      assert.isTrue(rule.func(3, 3));
     });
 
     it('should parse strings', function () {
-      assert.isTrue(rule('3', 3));
-    });
-
-    it('should pass nulls', function () {
-      assert.isTrue(rule(null, 4));
-    });
-
-    it('should pass undefined', function () {
-      assert.isTrue(rule(undefined, 4));
+      assert.isTrue(rule.func('3', 3));
     });
 
     it('should fail numbers which do not meet the requirement', function () {
-      assert.isFalse(rule(2, 3));
+      assert.isFalse(rule.func(2, 3));
     });
 
     it('should fail non-numeric values', function () {
-      assert.isFalse(rule('hello', 2));
-      assert.isFalse(rule([1, 2, 3], 2));
-      assert.isFalse(rule({field: 'value'}, 2));
+      assert.isFalse(rule.func(true, 2));
+      assert.isFalse(rule.func('hello', 2));
+      assert.isFalse(rule.func([1, 2, 3], 2));
+      assert.isFalse(rule.func({field: 'value'}, 2));
     });
   });
 
   describe('minLength', function () {
-    var rule = rules.minLength.func;
+    var rule = rules.minLength;
 
     it('should pass strings meeting the requirement', function () {
-      assert.isTrue(rule('abc', 3));
+      assert.isTrue(rule.func('abc', 3));
     });
 
     it('should pass arrays meeting the requirement', function () {
-      assert.isTrue(rule([1, 2, 3], 3));
-    });
-
-    it('should pass nulls', function () {
-      assert.isTrue(rule(null, 4));
-    });
-
-    it('should pass undefined', function () {
-      assert.isTrue(rule(undefined, 4));
+      assert.isTrue(rule.func([1, 2, 3], 3));
     });
 
     it('should fail strings which do not meet the requirement', function () {
-      assert.isFalse(rule('abc', 4));
+      assert.isFalse(rule.func('abc', 4));
     });
 
     it('should fail arrays which do not meet the requirement', function () {
-      assert.isFalse(rule([1, 2, 3], 4));
+      assert.isFalse(rule.func([1, 2, 3], 4));
     });
 
     it('should fail values without a length property', function () {
-      assert.isFalse(rule({}, 4));
+      assert.isFalse(rule.func({}, 4));
+      assert.isFalse(rule.func(1, 4));
+      assert.isFalse(rule.func(true, 4));
     });
   });
 
   describe('notEmpty', function () {
-    var rule = rules.notEmpty.func;
+    var rule = rules.notEmpty;
 
     it('should pass strings with stuff in them', function () {
-      assert.isTrue(rule('a'));
+      assert.isTrue(rule.func('a'));
     });
 
     it('should fail empty strings', function () {
-      assert.isFalse(rule(''));
+      assert.isFalse(rule.func(''));
     });
 
     it('should fail whitespace-only strings', function () {
-      assert.isFalse(rule('       \t\r\n   '));
+      assert.isFalse(rule.func('       \t\r\n   '));
     });
 
-    it('should pass nulls', function () {
-      assert.isTrue(rule(null));
-    });
-
-    it('should pass undefined', function () {
-      assert.isTrue(rule());
+    it('should fail non-strings', function () {
+      assert.isFalse(rule.func(true));
+      assert.isFalse(rule.func(1));
+      assert.isFalse(rule.func({}));
+      assert.isFalse(rule.func([]));
     });
   });
 
   describe('type', function () {
-    var rule = rules.type.func;
+    var rule = rules.type;
 
     it('should validate strings only as strings', function () {
-      assert.isTrue(rule('abc', 'string'));
-      assert.isFalse(rule('abc', 'number'));
-      assert.isFalse(rule('abc', 'object'));
-      assert.isFalse(rule('abc', 'array'));
+      assert.isTrue(rule.func('abc', 'string'));
+      assert.isFalse(rule.func('abc', 'number'));
+      assert.isFalse(rule.func('abc', 'object'));
+      assert.isFalse(rule.func('abc', 'array'));
     });
 
     it('should validate numbers only as numbers', function () {
-      assert.isFalse(rule(1, 'string'));
-      assert.isTrue(rule(1, 'number'));
-      assert.isFalse(rule(1, 'object'));
-      assert.isFalse(rule(1, 'array'));
+      assert.isFalse(rule.func(1, 'string'));
+      assert.isTrue(rule.func(1, 'number'));
+      assert.isFalse(rule.func(1, 'object'));
+      assert.isFalse(rule.func(1, 'array'));
     });
 
     it('should validate objects only as objects', function () {
-      assert.isFalse(rule({field: 'value'}, 'string'));
-      assert.isFalse(rule({field: 'value'}, 'number'));
-      assert.isTrue(rule({field: 'value'}, 'object'));
-      assert.isFalse(rule({field: 'value'}, 'array'));
+      assert.isFalse(rule.func({field: 'value'}, 'string'));
+      assert.isFalse(rule.func({field: 'value'}, 'number'));
+      assert.isTrue(rule.func({field: 'value'}, 'object'));
+      assert.isFalse(rule.func({field: 'value'}, 'array'));
     });
 
     it('should validate arrays only as arrays', function () {
-      assert.isFalse(rule(['abc'], 'string'));
-      assert.isFalse(rule(['abc'], 'number'));
-      assert.isFalse(rule(['abc'], 'object'));
-      assert.isTrue(rule(['abc'], 'array'));
-    });
-
-    it('should validate nulls as anything', function () {
-      assert.isTrue(rule(null, 'string'));
-      assert.isTrue(rule(null, 'number'));
-      assert.isTrue(rule(null, 'object'));
-      assert.isTrue(rule(null, 'array'));
-    });
-
-    it('should validate undefined as anything', function () {
-      assert.isTrue(rule(undefined, 'string'));
-      assert.isTrue(rule(undefined, 'number'));
-      assert.isTrue(rule(undefined, 'object'));
-      assert.isTrue(rule(undefined, 'array'));
+      assert.isFalse(rule.func(['abc'], 'string'));
+      assert.isFalse(rule.func(['abc'], 'number'));
+      assert.isFalse(rule.func(['abc'], 'object'));
+      assert.isTrue(rule.func(['abc'], 'array'));
     });
   });
 });

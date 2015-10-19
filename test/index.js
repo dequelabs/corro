@@ -44,6 +44,44 @@ describe('Corro', function () {
       assert.lengthOf(Object.keys(result.errors), 0);
     });
 
+    it('should not execute evaluateNull-less rules on null values', function () {
+      assert.isTrue(new Corro({
+        myRule: {
+          func: function (val) { return val !== null; },
+          message: 'message'
+        }
+      }).validate({field: {myRule: true}}, {field: null}).valid);
+    });
+
+    it('should execute evaluateNull rules on null values', function () {
+      assert.isFalse(new Corro({
+        myRule: {
+          func: function (val) { return val !== null; },
+          evaluateNull: true,
+          message: 'message'
+        }
+      }).validate({field: {myRule: true}}, {field: null}).valid);
+    });
+
+    it('should not execute evaluateUndefined-less rules on undefined values', function () {
+      assert.isTrue(new Corro({
+        myRule: {
+          func: function (val) { return val !== undefined; },
+          message: 'message'
+        }
+      }).validate({field: {myRule: true}}, {}).valid);
+    });
+
+    it('should execute evaluateUndefined rules on undefined values', function () {
+      assert.isFalse(new Corro({
+        myRule: {
+          func: function (val) { return val !== undefined; },
+          evaluateUndefined: true,
+          message: 'message'
+        }
+      }).validate({field: {myRule: true}}, {}).valid);
+    });
+
     it('should pass arg values to rules', function () {
       var result = new Corro().validate({
         field: {minLength: 10}
