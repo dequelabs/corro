@@ -4,7 +4,6 @@ var _ = require('lodash');
 var defaults = require('./lib/rules');
 
 var Corro = function (rules) {
-  console.log('ctor');
   this.rules = rules || {};
 
   _.merge(this.rules, defaults, function (customRule) { // 2nd param is defaultRule but we always go with custom
@@ -41,8 +40,6 @@ Corro.prototype.evaluateObject = function (schema, object, key) {
         children.push(k);
       }
     });
-  console.log(rules);
-  console.log(children);
 
   // run rules first, so we can exit early if we're missing required subobjects
   rules.reduce(function (acc, name) {
@@ -59,32 +56,32 @@ Corro.prototype.evaluateObject = function (schema, object, key) {
 
   if (!_.isEmpty(result)) { return result; }
 
-  // now process child objects
-  children.reduce(function (acc, name) {
-    var node = schema[name];
+  if (_.isArray(object) && children.length > 1) {
+    // if multiple subschemata exist for the array, we're screwed -- they might conflict, and there's no way to recover. just abort.
+    addResult('multiple array subschemata provided');
+  } else {
+    children.reduce(function (acc, name) {
+      var node = schema[name];
 
-    console.log('checking node', node);
+      var subResult;
 
-    var subResult;
+      if (_.isArray(object)) {
+        subResult = object.reduce(function (arrayResult, element, idx) {
+          arrayResult.push(self.evaluateObject(node, element, key + '.' + idx));
 
-    if (_.isArray(object)) {
-      console.log('object is an array');
-      subResult = object.reduce(function (arrayResult, element, idx) {
-        arrayResult.push(self.evaluateObject(node, element, key + '.' + idx));
+          return arrayResult;
+        }, []);
+      } else {
+        subResult = self.evaluateObject(node, object[name], key + '.' + name);
+      }
 
-        return arrayResult;
-      }, []);
-    } else {
-      console.log('object[name] = ', object[name]);
-      subResult = self.evaluateObject(node, object[name], key + '.' + name);
-    }
+      console.log('subresult: ', subResult);
 
-    console.log('subresult: ', subResult);
+      acc = acc.concat(subResult);
 
-    acc = acc.concat(subResult);
-
-    return acc;
-  }, []).forEach(addResult);
+      return acc;
+    }, []).forEach(addResult);
+  }
 
   return result;
 };

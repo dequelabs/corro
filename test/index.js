@@ -192,7 +192,7 @@ describe('Corro', function () {
         assert.lengthOf(result.errors['array.0.field'], 1);
       });
 
-      it('should stop gracefully and fail for nulls', function () {
+      it('should abort and fail for nulls', function () {
         var result = new Corro().validate({
           array: {
             required: true,
@@ -205,7 +205,7 @@ describe('Corro', function () {
         assert.lengthOf(result.errors.array, 1);
       });
 
-      it('should stop gracefully and fail for wrong types', function () {
+      it('should abort and fail for wrong types', function () {
         var result = new Corro().validate({
           array: {
             required: true,
@@ -216,6 +216,19 @@ describe('Corro', function () {
 
         assert.isFalse(result.valid);
         assert.lengthOf(result.errors['array.values'], 1);
+      });
+
+      it('should abort and fail if multiple subschemata provided', function () {
+        var result = new Corro().validate({
+          array: {
+            required: true,
+            values: {required: true},
+            values2: {required: true}
+          }
+        }, {array: ['one', 'two']});
+
+        assert.isFalse(result.valid);
+        assert.lengthOf(result.errors.array, 1);
       });
     });
 	});
