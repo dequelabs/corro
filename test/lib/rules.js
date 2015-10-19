@@ -40,6 +40,74 @@ describe('rules', function () {
     });
 	});
 
+  describe('match', function () {
+    var rule = rules.match.func;
+
+    it('should pass content matching a regex', function () {
+      assert.isTrue(rule('bloop', /b[lw]o+p/));
+    });
+
+    it('should fail content not matching a regex', function () {
+      assert.isFalse(rule('bloop', /b[lw]op/));
+    });
+
+    it('should match anywhere in the string (barring anchors)', function () {
+      assert.isTrue(rule('bloop', /o+/));
+    });
+
+    it('should coerce numbers to strings', function () {
+      assert.isTrue(rule(1234, /\d+/));
+    });
+
+    it('should fail objects', function () {
+      assert.isFalse(rule({field: 'value'}, /object/)); // test against what it would toString() as
+    });
+
+    it('should fail arrays', function () {
+      assert.isFalse(rule(['abc'], /abc/));
+    });
+
+    it('should pass null values', function () {
+      assert.isTrue(rule(null, /o+/));
+    });
+
+    it('should pass undefined values', function () {
+      assert.isTrue(rule(undefined, /o+/));
+    });
+  });
+
+  describe('maxLength', function () {
+    var rule = rules.maxLength.func;
+
+    it('should pass strings meeting the requirement', function () {
+      assert.isTrue(rule('abc', 3));
+    });
+
+    it('should pass arrays meeting the requirement', function () {
+      assert.isTrue(rule([1, 2, 3], 3));
+    });
+
+    it('should pass nulls', function () {
+      assert.isTrue(rule(null, 4));
+    });
+
+    it('should pass undefined', function () {
+      assert.isTrue(rule(undefined, 4));
+    });
+
+    it('should fail strings which do not the requirement', function () {
+      assert.isFalse(rule('abc', 2));
+    });
+
+    it('should fail arrays which do not the requirement', function () {
+      assert.isFalse(rule([1, 2, 3], 2));
+    });
+
+    it('should fail values without a length property', function () {
+      assert.isFalse(rule({}, 4));
+    });
+  });
+
   describe('minLength', function () {
     var rule = rules.minLength.func;
 
@@ -69,6 +137,30 @@ describe('rules', function () {
 
     it('should fail values without a length property', function () {
       assert.isFalse(rule({}, 4));
+    });
+  });
+
+  describe('notEmpty', function () {
+    var rule = rules.notEmpty.func;
+
+    it('should pass strings with stuff in them', function () {
+      assert.isTrue(rule('a'));
+    });
+
+    it('should fail empty strings', function () {
+      assert.isFalse(rule(''));
+    });
+
+    it('should fail whitespace-only strings', function () {
+      assert.isFalse(rule('       \t\r\n   '));
+    });
+
+    it('should pass nulls', function () {
+      assert.isTrue(rule(null));
+    });
+
+    it('should pass undefined', function () {
+      assert.isTrue(rule());
     });
   });
 

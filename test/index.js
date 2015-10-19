@@ -2,11 +2,11 @@
 
 var assert = require('chai').assert;
 var Corro = require('../index.js');
-var rules = require('../lib/rules');
 
 describe('Corro', function () {
   describe('ctor', function () {
     it('should add custom rules', function () {
+      var control = new Corro();
       var c = new Corro({
         myRule: {
           func: function (val) { return typeof val === 'number' && val > 10; },
@@ -14,11 +14,12 @@ describe('Corro', function () {
         }
       });
 
-      assert.lengthOf(Object.keys(c.rules), Object.keys(rules).length + 1);
+      assert.lengthOf(Object.keys(c.rules), Object.keys(control.rules).length + 1);
       assert.equal(c.rules.myRule.message, 'hello!');
     });
 
-    it('should allow overrides', function () {
+    it('should override existing rules if a custom rule of the same name is supplied', function () {
+      var control = new Corro();
       var c = new Corro({
         required: {
           func: function (val) { return !!val; },
@@ -26,7 +27,7 @@ describe('Corro', function () {
         }
       });
 
-      assert.lengthOf(Object.keys(c.rules), Object.keys(rules).length);
+      assert.lengthOf(Object.keys(c.rules), Object.keys(control.rules).length);
       assert.equal(c.rules.required.message, 'hello!');
     });
   });
