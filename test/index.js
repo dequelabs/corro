@@ -2,6 +2,7 @@
 
 var assert = require('chai').assert;
 var Corro = require('../index.js');
+var rules = require('../lib/rules');
 
 describe('Corro', function () {
   describe('ctor', function () {
@@ -13,7 +14,7 @@ describe('Corro', function () {
         }
       });
 
-      assert.lengthOf(Object.keys(c.rules), 3);
+      assert.lengthOf(Object.keys(c.rules), Object.keys(rules).length + 1);
       assert.equal(c.rules.myRule.message, 'hello!');
     });
 
@@ -25,7 +26,7 @@ describe('Corro', function () {
         }
       });
 
-      assert.lengthOf(Object.keys(c.rules), 2);
+      assert.lengthOf(Object.keys(c.rules), Object.keys(rules).length);
       assert.equal(c.rules.required.message, 'hello!');
     });
   });
@@ -108,18 +109,18 @@ describe('Corro', function () {
         assert.isOk(result.errors['obj.field.subfield']);
       });
 
-      it('should stop gracefully and fail for nulls', function () {
+      it('should abort and fail for nulls', function () {
         assert.isFalse(new Corro().validate({
           obj: {
             required: true,
             field: {
-              required: true
+              minLength: 10
             }
           }
         }, {obj: null}).valid);
       });
 
-      it('should stop gracefully and fail for wrong types', function () {
+      it('should abort and fail for wrong types', function () {
         assert.isFalse(new Corro().validate({
           obj: {
             required: true,

@@ -41,7 +41,7 @@ Corro.prototype.evaluateObject = function (schema, object, key) {
       }
     });
 
-  // run rules first, so we can exit early if we're missing required subobjects
+  // run rules first, so we can exit early if we're missing required subobjects or have wrong types or whatever
   rules.reduce(function (acc, name) {
     console.log('evaluating rule for object: ', object);
     var rule = self.rules[name];

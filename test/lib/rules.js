@@ -71,4 +71,50 @@ describe('rules', function () {
       assert.isFalse(rule({}, 4));
     });
   });
+
+  describe('type', function () {
+    var rule = rules.type.func;
+
+    it('should validate strings only as strings', function () {
+      assert.isTrue(rule('abc', 'string'));
+      assert.isFalse(rule('abc', 'number'));
+      assert.isFalse(rule('abc', 'object'));
+      assert.isFalse(rule('abc', 'array'));
+    });
+
+    it('should validate numbers only as numbers', function () {
+      assert.isFalse(rule(1, 'string'));
+      assert.isTrue(rule(1, 'number'));
+      assert.isFalse(rule(1, 'object'));
+      assert.isFalse(rule(1, 'array'));
+    });
+
+    it('should validate objects only as objects', function () {
+      assert.isFalse(rule({field: 'value'}, 'string'));
+      assert.isFalse(rule({field: 'value'}, 'number'));
+      assert.isTrue(rule({field: 'value'}, 'object'));
+      assert.isFalse(rule({field: 'value'}, 'array'));
+    });
+
+    it('should validate arrays only as arrays', function () {
+      assert.isFalse(rule(['abc'], 'string'));
+      assert.isFalse(rule(['abc'], 'number'));
+      assert.isFalse(rule(['abc'], 'object'));
+      assert.isTrue(rule(['abc'], 'array'));
+    });
+
+    it('should validate nulls as anything', function () {
+      assert.isTrue(rule(null, 'string'));
+      assert.isTrue(rule(null, 'number'));
+      assert.isTrue(rule(null, 'object'));
+      assert.isTrue(rule(null, 'array'));
+    });
+
+    it('should validate undefined as anything', function () {
+      assert.isTrue(rule(undefined, 'string'));
+      assert.isTrue(rule(undefined, 'number'));
+      assert.isTrue(rule(undefined, 'object'));
+      assert.isTrue(rule(undefined, 'array'));
+    });
+  });
 });
