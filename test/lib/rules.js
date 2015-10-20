@@ -5,46 +5,41 @@ var Corro = require('../../index.js');
 var rules = require('../../lib/rules.js');
 
 describe('rules', function () {
-  describe('required', function () {
-    var rule = rules.required;
+  describe('conform', function () {
+    var rule = rules.conform;
 
-    it('should evaluate null and undefined values', function () {
-      assert.isTrue(rule.alwaysRun);
+    it('should pass values passed by dependent rules', function () {
+      assert.isTrue(rule.func.apply(new Corro(), [
+        'test',
+        [{
+          func: function (val) { return val === 'test'; },
+          message: 'dummy'
+        }]
+      ]));
     });
 
-    it('should pass true', function () {
-      assert.isTrue(rule.func(true));
+    it('should fail values failed by dependent rules', function () {
+      assert.deepEqual(rule.func.apply(new Corro(), [
+        'test',
+        [{
+          func: function (val) { return val !== 'test'; },
+          message: 'this should be in an array'
+        }]]), ['this should be in an array']);
     });
 
-    it('should pass false', function () {
-      assert.isTrue(rule.func(false));
+    it('should compile a litany of failures', function () {
+      assert.deepEqual(rule.func.apply(new Corro(), [
+        'test',
+        [{
+          func: function (val) { return val !== 'test'; },
+          message: 'one'
+        }, {
+          func: function (val) { return val === 'no'; },
+          message: 'two'
+        }]]), ['one', 'two']);
     });
-
-    it('should pass strings', function () {
-      assert.isTrue(rule.func('hello'));
-    });
-
-    it('should pass numbers', function () {
-      assert.isTrue(rule.func(123));
-    });
-
-    it('should pass objects', function () {
-      assert.isTrue(rule.func({field: 'value'}));
-    });
-
-    it('should pass arrays', function () {
-      assert.isTrue(rule.func([1, 2, 3]));
-    });
-
-    it('should fail nulls', function () {
-      assert.isFalse(rule.func(null));
-    });
-
-    it('should fail undefined', function () {
-      assert.isFalse(rule.func(undefined));
-    });
-	});
-
+  });
+  
   describe('extension', function () {
     var rule = rules.extension;
 
@@ -140,41 +135,6 @@ describe('rules', function () {
       assert.isFalse(rule.func('under_score.com', 'hostname'));
       assert.isFalse(rule.func('-test.com', 'hostname'));
       assert.isFalse(rule.func('test-.com', 'hostname'));
-    });
-  });
-
-  describe('conform', function () {
-    var rule = rules.conform;
-
-    it('should pass values passed by dependent rules', function () {
-      assert.isTrue(rule.func.apply(new Corro(), [
-        'test',
-        [{
-          func: function (val) { return val === 'test'; },
-          message: 'dummy'
-        }]
-      ]));
-    });
-
-    it('should fail values failed by dependent rules', function () {
-      assert.deepEqual(rule.func.apply(new Corro(), [
-        'test',
-        [{
-          func: function (val) { return val !== 'test'; },
-          message: 'this should be in an array'
-        }]]), ['this should be in an array']);
-    });
-
-    it('should compile a litany of failures', function () {
-      assert.deepEqual(rule.func.apply(new Corro(), [
-        'test',
-        [{
-          func: function (val) { return val !== 'test'; },
-          message: 'one'
-        }, {
-          func: function (val) { return val === 'no'; },
-          message: 'two'
-        }]]), ['one', 'two']);
     });
   });
 
@@ -338,6 +298,46 @@ describe('rules', function () {
       assert.isFalse(rule.func('hi', ['one', 'two']));
     });
   });
+
+  describe('required', function () {
+    var rule = rules.required;
+
+    it('should evaluate null and undefined values', function () {
+      assert.isTrue(rule.alwaysRun);
+    });
+
+    it('should pass true', function () {
+      assert.isTrue(rule.func(true));
+    });
+
+    it('should pass false', function () {
+      assert.isTrue(rule.func(false));
+    });
+
+    it('should pass strings', function () {
+      assert.isTrue(rule.func('hello'));
+    });
+
+    it('should pass numbers', function () {
+      assert.isTrue(rule.func(123));
+    });
+
+    it('should pass objects', function () {
+      assert.isTrue(rule.func({field: 'value'}));
+    });
+
+    it('should pass arrays', function () {
+      assert.isTrue(rule.func([1, 2, 3]));
+    });
+
+    it('should fail nulls', function () {
+      assert.isFalse(rule.func(null));
+    });
+
+    it('should fail undefined', function () {
+      assert.isFalse(rule.func(undefined));
+    });
+	});
 
   describe('type', function () {
     var rule = rules.type;
