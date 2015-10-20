@@ -11,32 +11,32 @@ describe('rules', function () {
     it('should pass values passed by dependent rules', function () {
       assert.isTrue(rule.func.apply(new Corro(), [
         'test',
-        [{
+        {
           func: function (val) { return val === 'test'; },
           message: 'dummy'
-        }]
+        }
       ]));
     });
 
     it('should fail values failed by dependent rules', function () {
       assert.deepEqual(rule.func.apply(new Corro(), [
         'test',
-        [{
+        {
           func: function (val) { return val !== 'test'; },
           message: 'this should be in an array'
-        }]]), ['this should be in an array']);
+        }]), ['this should be in an array']);
     });
 
     it('should compile a litany of failures', function () {
       assert.deepEqual(rule.func.apply(new Corro(), [
         'test',
-        [{
+        {
           func: function (val) { return val !== 'test'; },
           message: 'one'
         }, {
           func: function (val) { return val === 'no'; },
           message: 'two'
-        }]]), ['one', 'two']);
+        }]), ['one', 'two']);
     });
   });
 
