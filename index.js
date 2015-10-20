@@ -29,7 +29,6 @@ Corro.prototype.runRule = function (rule, val, args) {
 
 Corro.prototype.evaluateObject = function (schema, object, key) {
   var self = this;
-  console.log('evaluatefield called for ' + key);
 
   var result = {};
   var addResult = function (item) {
@@ -57,7 +56,6 @@ Corro.prototype.evaluateObject = function (schema, object, key) {
 
   // run rules first, so we can exit early if we're missing required subobjects or have wrong types or whatever
   rules.reduce(function (acc, name) {
-    console.log('evaluating rule for object: ', object);
     var rule = self.rules[name];
     var ruleResult = self.runRule(rule, object, schema[name]);
 
@@ -70,27 +68,21 @@ Corro.prototype.evaluateObject = function (schema, object, key) {
   if (!_.isEmpty(result)) { return result; }
 
   if (_.isArray(object) && children.length > 1) {
-    // if multiple subschemata exist for the array, we're screwed -- they might conflict, and there's no way to recover. just abort.
+    // if multiple subschemata exist for an array, we're screwed -- they might conflict, and there's no way to recover. just abort.
     addResult('multiple array subschemata provided');
   } else {
     children.reduce(function (acc, name) {
       var node = schema[name];
 
-      var subResult;
-
       if (_.isArray(object)) {
-        subResult = object.reduce(function (arrayResult, element, idx) {
+        acc = acc.concat(object.reduce(function (arrayResult, element, idx) {
           arrayResult.push(self.evaluateObject(node, element, key + '.' + idx));
 
           return arrayResult;
-        }, []);
+        }, []));
       } else {
-        subResult = self.evaluateObject(node, object[name], key + '.' + name);
+        acc = acc.concat(self.evaluateObject(node, object[name], key + '.' + name));
       }
-
-      console.log('subresult: ', subResult);
-
-      acc = acc.concat(subResult);
 
       return acc;
     }, []).forEach(addResult);
@@ -116,8 +108,6 @@ Corro.prototype.validate = function (schema, obj) {
     valid: true,
     errors: {}
   });
-
-  console.log(JSON.stringify(result));
 
   return result;
 };
