@@ -305,11 +305,26 @@ describe('Corro', function () {
       assert.isFunction(new Corro().validate);
     });
 
-    it('should return a validation result', function () {
+    it('should return a passing validation result for empty schema and object', function () {
       var result = new Corro().validate({}, {});
 
       assert.isTrue(result.valid);
       assert.lengthOf(Object.keys(result.errors), 0);
+    });
+
+    it('should return a passing validation result', function () {
+      var result = new Corro().validate({field: {required: true}}, {field: 'value'});
+
+      assert.isTrue(result.valid);
+      assert.lengthOf(Object.keys(result.errors), 0);
+    });
+
+    it('should return a failing validation result', function () {
+      var result = new Corro().validate({field: {required: true}}, {notfield: 'value'});
+
+      assert.isFalse(result.valid);
+      assert.lengthOf(Object.keys(result.errors), 1);
+      assert.isOk(result.errors.field);
     });
   });
 });

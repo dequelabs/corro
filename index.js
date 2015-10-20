@@ -76,7 +76,8 @@ Corro.prototype.evaluateObject = function (schema, object, key) {
   if (_.isArray(object) && children.length > 1) {
     // if multiple subschemata exist for an array, we're screwed -- they might conflict, and there's no way to recover. just abort.
     // this is a bit of a structural lacuna, ideally there'd be a recursive 'values' or 'items' rule but there are Problems there
-    addResult('multiple array subschemata provided');
+    // in its current state with rule: null this is totally a hack i'm throwing in temporarily. please let it go away quickly
+    addResult({rule: null, message: 'multiple array subschemata provided'});
   } else {
     children.reduce(function (acc, name) {
       var node = schema[name];
@@ -101,24 +102,12 @@ Corro.prototype.evaluateObject = function (schema, object, key) {
 };
 
 Corro.prototype.validate = function (schema, obj) {
-  var self = this;
-  var result = Object.keys(schema).reduce(function (acc, key) {
-    // apply each rule in the corresponding ruleset definition to the field
-    var nodeResult = self.evaluateObject(schema[key], obj[key], key);
+  var results = this.evaluateObject(schema, obj);
 
-    if (!_.isEmpty(nodeResult)) {
-      acc.valid = false;
-
-      acc.errors = _.merge(acc.errors, nodeResult);
-    }
-
-    return acc;
-  }, {
-    valid: true,
-    errors: {}
-  });
-
-  return result;
+  return {
+    valid: Object.keys(results).length === 0,
+    errors: results
+  };
 };
 
 exports = module.exports = Corro;
