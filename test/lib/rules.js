@@ -7,11 +7,6 @@ describe('rules', function () {
   describe('required', function () {
     var rule = rules.required;
 
-    it('should evaluate null and undefined values', function () {
-      assert.isTrue(rule.evaluateNull);
-      assert.isTrue(rule.evaluateUndefined);
-    });
-
     it('should pass true', function () {
       assert.isTrue(rule.func(true));
     });
@@ -174,6 +169,7 @@ describe('rules', function () {
 
     it('should pass numbers meeting the requirement', function () {
       assert.isTrue(rule.func(3, 3));
+      assert.isTrue(rule.func(0, 0));
     });
 
     it('should parse strings', function () {
@@ -223,6 +219,7 @@ describe('rules', function () {
 
     it('should pass numbers meeting the requirement', function () {
       assert.isTrue(rule.func(3, 3));
+      assert.isTrue(rule.func(0, 0));
     });
 
     it('should parse strings', function () {
