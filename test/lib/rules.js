@@ -49,7 +49,7 @@ describe('rules', function () {
     var rule = rules.conform;
 
     it('should pass values passed by dependent rules', function () {
-      assert.isTrue(rule.handler.apply(new Corro(), [
+      assert.isTrue(rule.func.apply(new Corro(), [
         'test',
         [{
           func: function (val) { return val === 'test'; },
@@ -59,7 +59,7 @@ describe('rules', function () {
     });
 
     it('should fail values failed by dependent rules', function () {
-      assert.deepEqual(rule.handler.apply(new Corro(), [
+      assert.deepEqual(rule.func.apply(new Corro(), [
         'test',
         [{
           func: function (val) { return val !== 'test'; },
@@ -67,8 +67,8 @@ describe('rules', function () {
         }]]), ['this should be in an array']);
     });
 
-    it('should compile a litany of failure', function () {
-      assert.deepEqual(rule.handler.apply(new Corro(), [
+    it('should compile a litany of failures', function () {
+      assert.deepEqual(rule.func.apply(new Corro(), [
         'test',
         [{
           func: function (val) { return val !== 'test'; },

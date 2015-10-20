@@ -16,14 +16,11 @@ var Corro = function (rules) {
 Corro.prototype.runRule = function (rule, args) {
   var result;
 
-  if (rule.handler) {
-    result = rule.handler.apply(this, args);
-
-    return result;
-  } else if (rule.alwaysRun || (args[0] !== null && args[0] !== undefined)) {
+  if (rule.alwaysRun || (args[0] !== null && args[0] !== undefined)) {
     result = rule.func.apply(this, args);
 
-    if (!result) { return rule.message; }
+    if (_.isBoolean(result) && !result) { return rule.message; }
+    else if (_.isArray(result) || _.isString(result)) { return result; }
   }
 
   return null;

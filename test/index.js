@@ -5,6 +5,10 @@ var Corro = require('../index.js');
 
 describe('Corro', function () {
   describe('ctor', function () {
+    it('should be a function', function () {
+      assert.isFunction(Corro);
+    });
+
     it('should add custom rules', function () {
       var control = new Corro();
       var c = new Corro({
