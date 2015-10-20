@@ -32,6 +32,73 @@ describe('Corro', function () {
     });
   });
 
+  describe('runRule', function () {
+    it('should be a function', function () {
+      assert.isFunction(new Corro().runRule);
+    });
+
+    it('should return null on success', function () {
+      assert.isNull(new Corro().runRule({
+        func: function (val) { return !!val; },
+        message: 'message'
+      }, [true]));
+    });
+
+    it('should return the rule message on failure', function () {
+      assert.equal(new Corro().runRule({
+        func: function (val) { return !!val; },
+        message: 'message'
+      }, [false]), 'message');
+    });
+
+    it('should not execute rules without alwaysRun on null values', function () {
+      assert.isNull(new Corro().runRule({
+        func: function (val) { return val !== null; },
+        message: 'message'
+      }, [null]));
+    });
+
+    it('should execute rules with alwaysRun on null values', function () {
+      assert.equal(new Corro().runRule({
+        func: function (val) { return val !== null; },
+        alwaysRun: true,
+        message: 'message'
+      }, [null]), 'message');
+    });
+
+    it('should not execute rules without alwaysRun on undefined values', function () {
+      assert.isNull(new Corro().runRule({
+        func: function (val) { return val !== undefined; },
+        message: 'message'
+      }, []));
+    });
+
+    it('should execute rules with alwaysRun on undefined values', function () {
+      assert.equal(new Corro().runRule({
+        func: function (val) { return val !== undefined; },
+        alwaysRun: true,
+        message: 'message'
+      }, []), 'message');
+    });
+
+    it('should pass arg values to rules', function () {
+      var called = false;
+
+      assert.isNull(new Corro().runRule({
+        func: function (val, len) {
+          assert.equal(val, 'this is longer than ten characters');
+          assert.equal(len, 10);
+          called = true;
+
+          return val.length > len;
+        },
+        message: 'message'
+      }, ['this is longer than ten characters', 10]));
+
+      assert.isTrue(called);
+    });
+  });
+
   describe('validate', function () {
     it('should be a function', function () {
       assert.isFunction(new Corro().validate);
@@ -42,60 +109,6 @@ describe('Corro', function () {
 
       assert.isTrue(result.valid);
       assert.lengthOf(Object.keys(result.errors), 0);
-    });
-
-    it('should not execute evaluateNull-less rules on null values', function () {
-      assert.isTrue(new Corro({
-        myRule: {
-          func: function (val) { return val !== null; },
-          message: 'message'
-        }
-      }).validate({field: {myRule: true}}, {field: null}).valid);
-    });
-
-    it('should execute evaluateNull rules on null values', function () {
-      assert.isFalse(new Corro({
-        myRule: {
-          func: function (val) { return val !== null; },
-          evaluateNull: true,
-          message: 'message'
-        }
-      }).validate({field: {myRule: true}}, {field: null}).valid);
-    });
-
-    it('should not execute evaluateUndefined-less rules on undefined values', function () {
-      assert.isTrue(new Corro({
-        myRule: {
-          func: function (val) { return val !== undefined; },
-          message: 'message'
-        }
-      }).validate({field: {myRule: true}}, {}).valid);
-    });
-
-    it('should execute evaluateUndefined rules on undefined values', function () {
-      assert.isFalse(new Corro({
-        myRule: {
-          func: function (val) { return val !== undefined; },
-          evaluateUndefined: true,
-          message: 'message'
-        }
-      }).validate({field: {myRule: true}}, {}).valid);
-    });
-
-    it('should pass arg values to rules', function () {
-      var result = new Corro().validate({
-        field: {minLength: 10}
-      }, {
-        field: 'this is longer than ten characters'
-      });
-
-      assert.isTrue(result.valid);
-    });
-
-    it('should not execute rules with falsey values', function () {
-      assert.isTrue(new Corro().validate({
-        field: {required: false}
-      }, {}).valid);
     });
 
     it('should pass if all rules pass', function () {

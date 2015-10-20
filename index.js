@@ -13,11 +13,20 @@ var Corro = function (rules) {
   return this;
 };
 
-var canRun = function (rule, obj) {
-  if (obj === null && !rule.evaluateNull) { return false; }
-  else if (obj === undefined && !rule.evaluateUndefined) { return false; }
+Corro.prototype.runRule = function (rule, args) {
+  var result;
 
-  return true;
+  if (rule.handler) {
+    result = rule.handler.apply(this, args);
+
+    return result;
+  } else if (rule.alwaysRun || (args[0] !== null && args[0] !== undefined)) {
+    result = rule.func.apply(this, args);
+
+    if (!result) { return rule.message; }
+  }
+
+  return null;
 };
 
 Corro.prototype.evaluateObject = function (schema, object, key) {
@@ -52,14 +61,11 @@ Corro.prototype.evaluateObject = function (schema, object, key) {
   rules.reduce(function (acc, name) {
     console.log('evaluating rule for object: ', object);
     var rule = self.rules[name];
+    var args = [object].concat(schema[name] || []);
+    var ruleResult = self.runRule(rule, args);
 
-    if (canRun(rule, object)) {
-      var args = [object].concat(schema[name] || []);
-
-      var ruleResult = rule.func.apply(self, args);
-
-      if (!ruleResult) { acc.push(rule.message); }
-    }
+    if (_.isArray(ruleResult)) { acc = acc.concat(ruleResult); }
+    else if (ruleResult) { acc.push(ruleResult); }
 
     return acc;
   }, []).forEach(addResult);

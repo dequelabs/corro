@@ -1,6 +1,7 @@
 'use strict';
 
 var assert = require('chai').assert;
+var Corro = require('../../index.js');
 var rules = require('../../lib/rules.js');
 
 describe('rules', function () {
@@ -8,8 +9,7 @@ describe('rules', function () {
     var rule = rules.required;
 
     it('should evaluate null and undefined values', function () {
-      assert.isTrue(rule.evaluateNull);
-      assert.isTrue(rule.evaluateUndefined);
+      assert.isTrue(rule.alwaysRun);
     });
 
     it('should pass true', function () {
@@ -44,6 +44,41 @@ describe('rules', function () {
       assert.isFalse(rule.func(undefined));
     });
 	});
+
+  describe('conform', function () {
+    var rule = rules.conform;
+
+    it('should pass values passed by dependent rules', function () {
+      assert.isTrue(rule.handler.apply(new Corro(), [
+        'test',
+        [{
+          func: function (val) { return val === 'test'; },
+          message: 'dummy'
+        }]
+      ]));
+    });
+
+    it('should fail values failed by dependent rules', function () {
+      assert.deepEqual(rule.handler.apply(new Corro(), [
+        'test',
+        [{
+          func: function (val) { return val !== 'test'; },
+          message: 'this should be in an array'
+        }]]), ['this should be in an array']);
+    });
+
+    it('should compile a litany of failure', function () {
+      assert.deepEqual(rule.handler.apply(new Corro(), [
+        'test',
+        [{
+          func: function (val) { return val !== 'test'; },
+          message: 'one'
+        }, {
+          func: function (val) { return val === 'no'; },
+          message: 'two'
+        }]]), ['one', 'two']);
+    });
+  });
 
   describe('match', function () {
     var rule = rules.match;
