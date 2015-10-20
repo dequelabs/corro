@@ -110,54 +110,76 @@ describe('Corro', function () {
     });
   });
 
-  describe('validate', function () {
-    it('should be a function', function () {
-      assert.isFunction(new Corro().validate);
+  describe('evaluateObject', function () {
+    it('should return an empty object if all rules pass', function () {
+      var errors = new Corro().evaluateObject({required: true}, 'value', 'field');
+
+      assert.lengthOf(Object.keys(errors), 0);
     });
 
-    it('should return a validation result', function () {
-      var result = new Corro().validate({}, {});
+    it('should return an object with field errors if rules fail', function () {
+      var errors = new Corro().evaluateObject({required: true}, null, 'field');
 
-      assert.isTrue(result.valid);
-      assert.lengthOf(Object.keys(result.errors), 0);
-    });
-
-    it('should pass if all rules pass', function () {
-      var result = new Corro().validate({
-        field: {required: true}
-      }, {
-        field: 'value'
-      });
-
-      assert.isTrue(result.valid);
-      assert.lengthOf(Object.keys(result.errors), 0);
-    });
-
-    it('should return errors if rules fail', function () {
-      var result = new Corro().validate({
-        field: {required: true}
-      }, {});
-
-      assert.isFalse(result.valid);
-      assert.lengthOf(Object.keys(result.errors), 1);
+      assert.lengthOf(Object.keys(errors), 1);
     });
 
     describe('recursion into object trees', function () {
       it('should validate nested objects', function () {
-        assert.isTrue(new Corro().validate({
+        var errors = new Corro().evaluateObject({
           obj: {
             required: true,
             field: {
               required: true
             }
           }
-        }, {obj: {field: 'value'}}).valid);
+        }, {obj: {field: 'value'}});
+
+        assert.lengthOf(Object.keys(errors), 0);
       });
 
       it('should return an error if a problem is found deeper in the tree', function () {
-        var result = new Corro().validate({
+        var errors = new Corro().evaluateObject({
           obj: {
             required: true,
+            field: {
+              required: true
+            }
+          }
+        }, {obj: {}});
+
+        assert.lengthOf(Object.keys(errors), 1);
+        assert.isOk(errors['obj.field']);
+      });
+
+      it('should abort gracefully for nulls', function () {
+        var errors = new Corro().evaluateObject({
+          obj: {
+            field: {
+              minLength: 10
+            }
+          }
+        }, {obj: null});
+
+        assert.lengthOf(Object.keys(errors), 0);
+      });
+
+      it('should abort as gracefully as possible for wrong types', function () {
+        var errors = new Corro().evaluateObject({
+          obj: {
+            field: {
+              subfield: {
+                required: true
+              }
+            }
+          }
+        }, {obj: 'subfield is not accessible at all'});
+
+        assert.lengthOf(Object.keys(errors), 0);
+      });
+
+      it('will return errors if an immediate property of a wrong-typed object triggers an error', function () {
+        var errors = new Corro().evaluateObject({
+          obj: {
             field: {
               required: true,
               subfield: {
@@ -165,54 +187,28 @@ describe('Corro', function () {
               }
             }
           }
-        }, {obj: {field: {}}});
+        }, {obj: 'subfield is not accessible at all'});
 
-        assert.isFalse(result.valid);
-        assert.lengthOf(Object.keys(result.errors), 1);
-        assert.isOk(result.errors['obj.field.subfield']);
-      });
-
-      it('should abort and fail for nulls', function () {
-        assert.isFalse(new Corro().validate({
-          obj: {
-            required: true,
-            field: {
-              minLength: 10
-            }
-          }
-        }, {obj: null}).valid);
-      });
-
-      it('should abort and fail for wrong types', function () {
-        assert.isFalse(new Corro().validate({
-          obj: {
-            required: true,
-            field: {
-              required: true
-            }
-          }
-        }, {obj: 'good luck walking down this'}).valid);
+        assert.lengthOf(Object.keys(errors), 1);
       });
     });
 
     describe('recursion into array elements', function () {
       it('should pass arrays where all simple values conform', function () {
-        var result = new Corro().validate({
+        var errors = new Corro().evaluateObject({
           array: {
             required: true,
-            // minLength: 5, etc
             values: {required: true}
           }
         }, {array: ['one', 'two']});
 
-        assert.isTrue(result.valid);
+        assert.lengthOf(Object.keys(errors), 0);
       });
 
       it('should pass arrays where all complex values conform', function () {
-        var result = new Corro().validate({
+        var errors = new Corro().evaluateObject({
           array: {
             required: true,
-            // minLength: 5, etc
             values: {
               required: true,
               field: {
@@ -222,27 +218,25 @@ describe('Corro', function () {
           }
         }, {array: [{field: 'value'}]});
 
-        assert.isTrue(result.valid);
+        assert.lengthOf(Object.keys(errors), 0);
       });
 
       it('should fail individual nonconforming elements', function () {
-        var result = new Corro().validate({
+        var errors = new Corro().evaluateObject({
           array: {
             required: true,
-            // minLength: 5, etc
             values: {required: true}
           }
         }, {array: ['one', 'two', null]});
 
-        assert.isFalse(result.valid);
-        assert.lengthOf(result.errors['array.2'], 1);
+        assert.lengthOf(Object.keys(errors), 1);
+        assert.isOk(errors['array.2'], 1);
       });
 
       it('should fail individual nonconforming complex elements', function () {
-        var result = new Corro().validate({
+        var errors = new Corro().evaluateObject({
           array: {
             required: true,
-            // minLength: 5, etc
             values: {
               required: true,
               field: {
@@ -252,34 +246,43 @@ describe('Corro', function () {
           }
         }, {array: [{notfield: 'value'}]});
 
-        assert.isFalse(result.valid);
-        assert.lengthOf(result.errors['array.0.field'], 1);
+        assert.lengthOf(Object.keys(errors), 1);
+        assert.isOk(errors['array.0.field'], 1);
       });
 
-      it('should abort and fail for nulls', function () {
-        var result = new Corro().validate({
+      it('should abort gracefully for nulls', function () {
+        var errors = new Corro().evaluateObject({
           array: {
-            required: true,
-            // minLength: 5, etc
-            values: {required: true}
+            values: {required: true}  // kind of a weird way of saying this array may not contain null/undefined
           }
         }, {array: null});
 
-        assert.isFalse(result.valid);
-        assert.lengthOf(result.errors.array, 1);
+        assert.lengthOf(Object.keys(errors), 0);
       });
 
-      it('should abort and fail for wrong types', function () {
-        var result = new Corro().validate({
+      it('should abort as gracefully as possible for wrong types', function () {
+        var errors = new Corro().evaluateObject({
           array: {
-            required: true,
-            // minLength: 5, etc
-            values: {required: true}
+            values: {
+              field: {required: true}
+            }
           }
         }, {array: 'this is not an array'});
 
-        assert.isFalse(result.valid);
-        assert.lengthOf(result.errors['array.values'], 1);
+        assert.lengthOf(Object.keys(errors), 0);
+      });
+
+      it('will return errors if an immediate property of a wrong-typed object triggers an error', function () {
+        var errors = new Corro().evaluateObject({
+          array: {
+            values: {
+              required: true,
+              field: {required: true}
+            }
+          }
+        }, {array: 'this is not an array'});
+
+        assert.lengthOf(Object.keys(errors), 1);
       });
 
       it('should abort and fail if multiple subschemata provided', function () {
@@ -296,4 +299,17 @@ describe('Corro', function () {
       });
     });
 	});
+
+  describe('validate', function () {
+    it('should be a function', function () {
+      assert.isFunction(new Corro().validate);
+    });
+
+    it('should return a validation result', function () {
+      var result = new Corro().validate({}, {});
+
+      assert.isTrue(result.valid);
+      assert.lengthOf(Object.keys(result.errors), 0);
+    });
+  });
 });

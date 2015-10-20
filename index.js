@@ -15,13 +15,14 @@ var Corro = function (rules) {
 };
 
 Corro.prototype.runRule = function (rule, val, args) {
-  var result;
-
   if (rule.alwaysRun || (val !== null && val !== undefined)) {
-    result = rule.func.apply(this, [val].concat(args || []));
+    var result = rule.func.apply(this, [val].concat(args || []));
 
-    if (_.isBoolean(result) && !result) { return format.apply(this, [rule.message].concat(args)); }
-    else if (_.isArray(result) || _.isString(result)) { return result; }
+    if (_.isBoolean(result) && !result) {
+      return format.apply(this, [rule.message].concat(args));
+    } else if (_.isArray(result)) {
+      return result;
+    }
   }
 
   return null;
@@ -32,7 +33,7 @@ Corro.prototype.evaluateObject = function (schema, object, key) {
 
   var result = {};
   var addResult = function (item) {
-    if (typeof item === 'string') {
+    if (item.hasOwnProperty('rule')) {
       if (!result[key]) { result[key] = []; }
 
       result[key].push(item);
@@ -59,8 +60,13 @@ Corro.prototype.evaluateObject = function (schema, object, key) {
     var rule = self.rules[name];
     var ruleResult = self.runRule(rule, object, schema[name]);
 
-    if (_.isArray(ruleResult)) { acc = acc.concat(ruleResult); }
-    else if (ruleResult) { acc.push(ruleResult); }
+    if (_.isArray(ruleResult)) {
+      acc = acc.concat(ruleResult.map(function (r) {
+        return {rule: name, args: [], message: r};
+      }));
+    } else if (ruleResult) {
+      acc.push({rule: name, args: schema[name], message: ruleResult});
+    }
 
     return acc;
   }, []).forEach(addResult);
@@ -69,6 +75,7 @@ Corro.prototype.evaluateObject = function (schema, object, key) {
 
   if (_.isArray(object) && children.length > 1) {
     // if multiple subschemata exist for an array, we're screwed -- they might conflict, and there's no way to recover. just abort.
+    // this is a bit of a structural lacuna, ideally there'd be a recursive 'values' or 'items' rule but there are Problems there
     addResult('multiple array subschemata provided');
   } else {
     children.reduce(function (acc, name) {
@@ -80,8 +87,10 @@ Corro.prototype.evaluateObject = function (schema, object, key) {
 
           return arrayResult;
         }, []));
-      } else {
-        acc = acc.concat(self.evaluateObject(node, object[name], key + '.' + name));
+      } else if (object) {
+        var child = key ? key + '.' + name : name;
+
+        acc = acc.concat(self.evaluateObject(node, object[name], child));
       }
 
       return acc;
