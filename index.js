@@ -13,11 +13,11 @@ var Corro = function (rules) {
   return this;
 };
 
-Corro.prototype.runRule = function (rule, args) {
+Corro.prototype.runRule = function (rule, val, args) {
   var result;
 
-  if (rule.alwaysRun || (args[0] !== null && args[0] !== undefined)) {
-    result = rule.func.apply(this, args);
+  if (rule.alwaysRun || (val !== null && val !== undefined)) {
+    result = rule.func.apply(this, [val].concat(args || []));
 
     if (_.isBoolean(result) && !result) { return rule.message; }
     else if (_.isArray(result) || _.isString(result)) { return result; }
@@ -58,8 +58,7 @@ Corro.prototype.evaluateObject = function (schema, object, key) {
   rules.reduce(function (acc, name) {
     console.log('evaluating rule for object: ', object);
     var rule = self.rules[name];
-    var args = [object].concat(schema[name] || []);
-    var ruleResult = self.runRule(rule, args);
+    var ruleResult = self.runRule(rule, object, schema[name]);
 
     if (_.isArray(ruleResult)) { acc = acc.concat(ruleResult); }
     else if (ruleResult) { acc.push(ruleResult); }

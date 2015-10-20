@@ -45,21 +45,21 @@ describe('Corro', function () {
       assert.isNull(new Corro().runRule({
         func: function (val) { return !!val; },
         message: 'message'
-      }, [true]));
+      }, true));
     });
 
     it('should return the rule message on failure', function () {
       assert.equal(new Corro().runRule({
         func: function (val) { return !!val; },
         message: 'message'
-      }, [false]), 'message');
+      }, false), 'message');
     });
 
     it('should not execute rules without alwaysRun on null values', function () {
       assert.isNull(new Corro().runRule({
         func: function (val) { return val !== null; },
         message: 'message'
-      }, [null]));
+      }, null));
     });
 
     it('should execute rules with alwaysRun on null values', function () {
@@ -67,14 +67,14 @@ describe('Corro', function () {
         func: function (val) { return val !== null; },
         alwaysRun: true,
         message: 'message'
-      }, [null]), 'message');
+      }, null), 'message');
     });
 
     it('should not execute rules without alwaysRun on undefined values', function () {
       assert.isNull(new Corro().runRule({
         func: function (val) { return val !== undefined; },
         message: 'message'
-      }, []));
+      }));
     });
 
     it('should execute rules with alwaysRun on undefined values', function () {
@@ -82,7 +82,7 @@ describe('Corro', function () {
         func: function (val) { return val !== undefined; },
         alwaysRun: true,
         message: 'message'
-      }, []), 'message');
+      }), 'message');
     });
 
     it('should pass arg values to rules', function () {
@@ -97,7 +97,7 @@ describe('Corro', function () {
           return val.length > len;
         },
         message: 'message'
-      }, ['this is longer than ten characters', 10]));
+      }, 'this is longer than ten characters', [10]));
 
       assert.isTrue(called);
     });
