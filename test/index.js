@@ -101,6 +101,13 @@ describe('Corro', function () {
 
       assert.isTrue(called);
     });
+
+    it('should interpolate args into messages', function () {
+      assert.equal(new Corro().runRule({
+        func: function (val, len) { return val.length > len; },
+        message: 'must be longer than {0} characters'
+      }, 'hi', [10]), 'must be longer than 10 characters');
+    });
   });
 
   describe('validate', function () {

@@ -1,6 +1,7 @@
 'use strict';
 
 var _ = require('lodash');
+var format = require('string-format');
 var defaults = require('./lib/rules');
 
 var Corro = function (rules) {
@@ -19,7 +20,7 @@ Corro.prototype.runRule = function (rule, val, args) {
   if (rule.alwaysRun || (val !== null && val !== undefined)) {
     result = rule.func.apply(this, [val].concat(args || []));
 
-    if (_.isBoolean(result) && !result) { return rule.message; }
+    if (_.isBoolean(result) && !result) { return format.apply(this, [rule.message].concat(args)); }
     else if (_.isArray(result) || _.isString(result)) { return result; }
   }
 
