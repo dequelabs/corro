@@ -39,7 +39,7 @@ describe('rules', function () {
         }]]), ['one', 'two']);
     });
   });
-  
+
   describe('extension', function () {
     var rule = rules.extension;
 
@@ -135,6 +135,20 @@ describe('rules', function () {
       assert.isFalse(rule.func('under_score.com', 'hostname'));
       assert.isFalse(rule.func('-test.com', 'hostname'));
       assert.isFalse(rule.func('test-.com', 'hostname'));
+    });
+
+    it('should validate ObjectIds', function () {
+      assert.isTrue(rule.func('507f1f77bcf86cd799439011', 'objectId'));
+      assert.isFalse(rule.func('507f1f77bcf86cd79943901', 'objectId'));
+      assert.isFalse(rule.func('507f1f77bcf86cd7994390111', 'objectId'));
+      assert.isFalse(rule.func('z07f1f77bcf86cd799439011', 'objectId'));
+    });
+
+    it('should validate uuids', function () {
+      assert.isTrue(rule.func('10f31cce-728a-11e5-84cf-27795119e869', 'uuid'));
+      assert.isFalse(rule.func('10f31cce-728-11e5-84cf-27795119e869', 'uuid'));
+      assert.isFalse(rule.func('10f31cce-728a-11e5ee-84cf-27795119e869', 'uuid'));
+      assert.isFalse(rule.func('10f31cce-728a-11e5-84cf-2779-119e869', 'uuid'));
     });
   });
 
