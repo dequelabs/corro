@@ -127,6 +127,21 @@ describe('Corro', function () {
       assert.lengthOf(Object.keys(errors), 1);
     });
 
+    it('should explode multiple result messages', function () {
+      var errors = new Corro().evaluateObject({
+        conform: [{
+          func: function (val) { return val !== 'test'; },
+          message: 'one'
+        }, {
+          func: function (val) { return val !== 'test'; },
+          message: 'two'
+        }]
+      }, 'test', 'field');
+
+      assert.lengthOf(errors.field, 2);
+      assert.equal(errors.field.every(function (err) { return err.rule === 'conform'; }), true);
+    });
+
     describe('recursion into object trees', function () {
       it('should validate nested objects', function () {
         var errors = new Corro().evaluateObject({

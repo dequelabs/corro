@@ -45,19 +45,18 @@ Corro.prototype.evaluateObject = function (schema, object, key) {
   // run rules first, so we can exit early if we're missing required subobjects or have wrong types or whatever
   var result = rules.map(function (name) {
       return {
-        rule: name,
-        args: schema[name],
+        name: name,
         result: self.runRule(self.rules[name], object, schema[name])
       };
     })
   .reduce(function (acc, r) {
-    if (r.result.length > 0) {
+    return r.result.reduce(function (acc, res) {
       if (!acc[key]) { acc[key] = []; }
 
-      acc[key].push(r);
-    }
+      acc[key].push({rule: r.name, args: schema[r.name], result: res});
 
-    return acc;
+      return acc;
+    }, acc);
   }, {});
 
   // also bail early if object is falsy since there's not much point checking for children
