@@ -16,6 +16,8 @@ var Corro = function (rules) {
 
 Corro.prototype.runRule = function (rule, val, args) {
   if (rule.alwaysRun || (val !== null && val !== undefined)) {
+    if (rule.argArray) { args = [args]; }
+    
     var result = rule.func.apply(this, [val].concat(args || []));
 
     if (_.isBoolean(result) && !result) {

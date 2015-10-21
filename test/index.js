@@ -102,6 +102,24 @@ describe('Corro', function () {
       assert.isTrue(called);
     });
 
+    it('should preserve arg arrays if the rule definition requires it', function () {
+      var called = false;
+
+      assert.lengthOf(new Corro().runRule({
+        func: function (val, arr) {
+          assert.isArray(arr);
+
+          called = true;
+
+          return arr.indexOf(val) > -1;
+        },
+        argArray: true,
+        message: 'message'
+      }, 'hello', ['hi', 'hello']), 0);
+
+      assert.isTrue(called);
+    });
+
     it('should interpolate args into messages', function () {
       assert.equal(new Corro().runRule({
         func: function (val, len) { return val.length > len; },

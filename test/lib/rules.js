@@ -338,8 +338,12 @@ describe('rules', function () {
   describe('present', function () {
     var rule = rules.present;
 
+    it('should take array args', function () {
+      assert.isTrue(rule.argArray);
+    });
+
     it('should pass values in the supplied array', function () {
-      assert.isTrue(rule.func('hi', ['hi', 'hello']));
+      assert.isTrue(rule.func('hello', ['hi', 'hello']));
     });
 
     it('should fail values not in the supplied array', function () {
