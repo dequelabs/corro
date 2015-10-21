@@ -149,6 +149,28 @@ describe('rules', function () {
       assert.isFalse(rule.func('test-.com', 'hostname'));
     });
 
+    it('should validate hostnames or ipv4 addresses', function () {
+      assert.isTrue(rule.func('test.com', 'hostnameOrIp'));
+      assert.isTrue(rule.func('test-hyphens.com', 'hostnameOrIp'));
+      assert.isTrue(rule.func('q.local', 'hostnameOrIp'));
+      assert.isTrue(rule.func('subdomain.test.com', 'hostnameOrIp'));
+      assert.isTrue(rule.func('test', 'hostnameOrIp'));
+      assert.isTrue(rule.func('127.0.0.1', 'hostnameOrIp'));
+      assert.isTrue(rule.func('2.2.2.2', 'hostnameOrIp'));
+
+      // these next two are false positives due to the hostname regex matching them
+      assert.isTrue(rule.func('999.999.999.999', 'hostnameOrIp'));
+      assert.isTrue(rule.func('254.254.254', 'hostnameOrIp'));
+
+      assert.isFalse(rule.func(new Array(257).join('a'), 'hostnameOrIp'));  // 257 is intentional, resulting length is 256
+      assert.isFalse(rule.func('üñîçøðé.test.com', 'hostnameOrIp'));
+      assert.isFalse(rule.func('under_score.com', 'hostnameOrIp'));
+      assert.isFalse(rule.func('-test.com', 'hostnameOrIp'));
+      assert.isFalse(rule.func('test-.com', 'hostnameOrIp'));
+      assert.isFalse(rule.func('254.254.254.', 'hostnameOrIp'));
+      assert.isFalse(rule.func('hi!', 'hostnameOrIp'));
+    });
+
     it('should validate ObjectIds', function () {
       assert.isTrue(rule.func('507f1f77bcf86cd799439011', 'objectId'));
       assert.isFalse(rule.func('507f1f77bcf86cd79943901', 'objectId'));
