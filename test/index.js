@@ -41,54 +41,54 @@ describe('Corro', function () {
       assert.isFunction(new Corro().runRule);
     });
 
-    it('should return null on success', function () {
-      assert.isNull(new Corro().runRule({
+    it('should return an empty array on success', function () {
+      assert.lengthOf(new Corro().runRule({
         func: function (val) { return !!val; },
         message: 'message'
-      }, true));
+      }, true), 0);
     });
 
     it('should return the rule message on failure', function () {
-      assert.equal(new Corro().runRule({
+      assert.deepEqual(new Corro().runRule({
         func: function (val) { return !!val; },
         message: 'message'
-      }, false), 'message');
+      }, false), ['message']);
     });
 
     it('should not execute rules without alwaysRun on null values', function () {
-      assert.isNull(new Corro().runRule({
+      assert.lengthOf(new Corro().runRule({
         func: function (val) { return val !== null; },
         message: 'message'
-      }, null));
+      }, null), 0);
     });
 
     it('should execute rules with alwaysRun on null values', function () {
-      assert.equal(new Corro().runRule({
+      assert.deepEqual(new Corro().runRule({
         func: function (val) { return val !== null; },
         alwaysRun: true,
         message: 'message'
-      }, null), 'message');
+      }, null), ['message']);
     });
 
     it('should not execute rules without alwaysRun on undefined values', function () {
-      assert.isNull(new Corro().runRule({
+      assert.lengthOf(new Corro().runRule({
         func: function (val) { return val !== undefined; },
         message: 'message'
-      }));
+      }), 0);
     });
 
     it('should execute rules with alwaysRun on undefined values', function () {
-      assert.equal(new Corro().runRule({
+      assert.deepEqual(new Corro().runRule({
         func: function (val) { return val !== undefined; },
         alwaysRun: true,
         message: 'message'
-      }), 'message');
+      }), ['message']);
     });
 
     it('should pass arg values to rules', function () {
       var called = false;
 
-      assert.isNull(new Corro().runRule({
+      assert.lengthOf(new Corro().runRule({
         func: function (val, len) {
           assert.equal(val, 'this is longer than ten characters');
           assert.equal(len, 10);
@@ -97,7 +97,7 @@ describe('Corro', function () {
           return val.length > len;
         },
         message: 'message'
-      }, 'this is longer than ten characters', [10]));
+      }, 'this is longer than ten characters', [10]), 0);
 
       assert.isTrue(called);
     });
@@ -111,6 +111,10 @@ describe('Corro', function () {
   });
 
   describe('evaluateObject', function () {
+    it('should be a function', function () {
+      assert.isFunction(new Corro().evaluateObject);
+    });
+
     it('should return an empty object if all rules pass', function () {
       var errors = new Corro().evaluateObject({required: true}, 'value', 'field');
 

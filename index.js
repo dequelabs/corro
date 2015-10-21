@@ -19,32 +19,20 @@ Corro.prototype.runRule = function (rule, val, args) {
     var result = rule.func.apply(this, [val].concat(args || []));
 
     if (_.isBoolean(result) && !result) {
-      return format.apply(this, [rule.message].concat(args));
+      return [format.apply(this, [rule.message].concat(args))];
     } else if (_.isArray(result)) {
       return result;
     }
   }
 
-  return null;
+  return [];
 };
 
 Corro.prototype.evaluateObject = function (schema, object, key) {
   var self = this;
-
   var result = {};
-  var addResult = function (item) {
-    if (item.hasOwnProperty('rule')) {
-      if (!result[key]) { result[key] = []; }
-
-      result[key].push(item);
-    } else {
-      Object.keys(item).forEach(function (k) {
-        result[k] = item[k];
-      });
-    }
-  };
-
   var rules = [], children = [];
+  
   Object.keys(schema)
     .filter(function (k) { return schema[k]; }) // skip stuff like required: false
     .forEach(function (k) {
@@ -56,46 +44,50 @@ Corro.prototype.evaluateObject = function (schema, object, key) {
     });
 
   // run rules first, so we can exit early if we're missing required subobjects or have wrong types or whatever
-  rules.reduce(function (acc, name) {
-    var rule = self.rules[name];
-    var ruleResult = self.runRule(rule, object, schema[name]);
+  rules.map(function (name) {
+      return {
+        rule: name,
+        args: schema[name],
+        result: self.runRule(self.rules[name], object, schema[name])
+      };
+    })
+  .filter(function (r) { return r.result.length > 0; })
+  .forEach(function (r) {
+    if (!result[key]) { result[key] = []; }
 
-    if (_.isArray(ruleResult)) {
-      acc = acc.concat(ruleResult.map(function (r) {
-        return {rule: name, args: [], message: r};
-      }));
-    } else if (ruleResult) {
-      acc.push({rule: name, args: schema[name], message: ruleResult});
-    }
+    result[key].push(r);
+  });
 
-    return acc;
-  }, []).forEach(addResult);
-
-  if (!_.isEmpty(result)) { return result; }
+  // also bail early if object is falsy since there's not much point checking for children
+  if (!_.isEmpty(result) || !object) { return result; }
 
   if (_.isArray(object) && children.length > 1) {
     // if multiple subschemata exist for an array, we're screwed -- they might conflict, and there's no way to recover. just abort.
     // this is a bit of a structural lacuna, ideally there'd be a recursive 'values' or 'items' rule but there are Problems there
     // in its current state with rule: null this is totally a hack i'm throwing in temporarily. please let it go away quickly
-    addResult({rule: null, message: 'multiple array subschemata provided'});
+    result[key] = [{rule: null, message: 'multiple array subschemata provided'}];
   } else {
-    children.reduce(function (acc, name) {
+    children.map(function (name) {
       var node = schema[name];
 
       if (_.isArray(object)) {
-        acc = acc.concat(object.reduce(function (arrayResult, element, idx) {
-          arrayResult.push(self.evaluateObject(node, element, key + '.' + idx));
-
-          return arrayResult;
-        }, []));
-      } else if (object) {
+        return object.map(function (element, idx) {
+          return self.evaluateObject(node, element, key + '.' + idx);
+        });
+      } else {
         var child = key ? key + '.' + name : name;
 
-        acc = acc.concat(self.evaluateObject(node, object[name], child));
+        return [self.evaluateObject(node, object[name], child)];
       }
-
-      return acc;
-    }, []).forEach(addResult);
+    })
+    .filter(function (r) { return !_.isEmpty(r); })
+    .forEach(function (item) {
+      item.forEach(function (r) {
+        Object.keys(r).forEach(function (k) {
+          result[k] = r[k];
+        });
+      });
+    });
   }
 
   return result;
