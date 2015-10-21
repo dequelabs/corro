@@ -30,9 +30,8 @@ Corro.prototype.runRule = function (rule, val, args) {
 
 Corro.prototype.evaluateObject = function (schema, object, key) {
   var self = this;
-  var result = {};
   var rules = [], children = [];
-  
+
   Object.keys(schema)
     .filter(function (k) { return schema[k]; }) // skip stuff like required: false
     .forEach(function (k) {
@@ -44,19 +43,22 @@ Corro.prototype.evaluateObject = function (schema, object, key) {
     });
 
   // run rules first, so we can exit early if we're missing required subobjects or have wrong types or whatever
-  rules.map(function (name) {
+  var result = rules.map(function (name) {
       return {
         rule: name,
         args: schema[name],
         result: self.runRule(self.rules[name], object, schema[name])
       };
     })
-  .filter(function (r) { return r.result.length > 0; })
-  .forEach(function (r) {
-    if (!result[key]) { result[key] = []; }
+  .reduce(function (acc, r) {
+    if (r.result.length > 0) {
+      if (!acc[key]) { acc[key] = []; }
 
-    result[key].push(r);
-  });
+      acc[key].push(r);
+    }
+
+    return acc;
+  }, {});
 
   // also bail early if object is falsy since there's not much point checking for children
   if (!_.isEmpty(result) || !object) { return result; }
@@ -67,7 +69,7 @@ Corro.prototype.evaluateObject = function (schema, object, key) {
     // in its current state with rule: null this is totally a hack i'm throwing in temporarily. please let it go away quickly
     result[key] = [{rule: null, message: 'multiple array subschemata provided'}];
   } else {
-    children.map(function (name) {
+    result = children.map(function (name) {
       var node = schema[name];
 
       if (_.isArray(object)) {
@@ -80,14 +82,11 @@ Corro.prototype.evaluateObject = function (schema, object, key) {
         return [self.evaluateObject(node, object[name], child)];
       }
     })
-    .filter(function (r) { return !_.isEmpty(r); })
-    .forEach(function (item) {
-      item.forEach(function (r) {
-        Object.keys(r).forEach(function (k) {
-          result[k] = r[k];
-        });
-      });
-    });
+    .reduce(function (acc, arr) {
+      return arr.reduce(function (acc, res) { // bad form to hide it but it's literally the same thing
+        return _.merge(acc, res);
+      }, acc);
+    }, result);
   }
 
   return result;

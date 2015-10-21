@@ -38,6 +38,18 @@ describe('rules', function () {
           message: 'two'
         }]), ['one', 'two']);
     });
+
+    it('should exclude messages from successful dependent rules', function () {
+      assert.deepEqual(rule.func.apply(new Corro(), [
+        'test',
+        {
+          func: function (val) { return val === 'test'; },
+          message: 'one'
+        }, {
+          func: function (val) { return val === 'no'; },
+          message: 'two'
+        }]), ['two']);
+    });
   });
 
   describe('extension', function () {
