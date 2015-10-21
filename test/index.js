@@ -165,6 +165,16 @@ describe('Corro', function () {
       assert.equal(errors.field[1].result, 'two');
     });
 
+    it('should not run rules that don\'t exist', function () {
+      var errors = new Corro().evaluateObject({
+        slithy: true
+      }, 'test', 'field');
+
+      assert.lengthOf(errors.field, 1);
+      assert.equal(errors.field[0].rule, 'slithy');
+      assert.equal(errors.field[0].result, 'invalid rule specified');
+    });
+
     describe('recursion into object trees', function () {
       it('should validate nested objects', function () {
         var errors = new Corro().evaluateObject({

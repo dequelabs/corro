@@ -17,7 +17,7 @@ var Corro = function (rules) {
 Corro.prototype.runRule = function (rule, val, args) {
   if (rule.alwaysRun || (val !== null && val !== undefined)) {
     if (rule.argArray) { args = [args]; }
-    
+
     var result = rule.func.apply(this, [val].concat(args || []));
 
     if (_.isBoolean(result) && !result) {
@@ -46,11 +46,11 @@ Corro.prototype.evaluateObject = function (schema, object, key) {
 
   // run rules first, so we can exit early if we're missing required subobjects or have wrong types or whatever
   var result = rules.map(function (name) {
-      return {
-        name: name,
-        result: self.runRule(self.rules[name], object, schema[name])
-      };
-    })
+    return {
+      name: name,
+      result: !!self.rules[name] ? self.runRule(self.rules[name], object, schema[name]) : ['invalid rule specified']
+    };
+  })
   .reduce(function (acc, r) {
     var isCompound = r.result.length > 1;
 
