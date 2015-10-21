@@ -125,6 +125,8 @@ describe('Corro', function () {
       var errors = new Corro().evaluateObject({required: true}, null, 'field');
 
       assert.lengthOf(Object.keys(errors), 1);
+      assert.equal(errors.field[0].rule, 'required');
+      assert.equal(errors.field[0].result, 'is required');
     });
 
     it('should explode multiple result messages', function () {
@@ -139,7 +141,10 @@ describe('Corro', function () {
       }, 'test', 'field');
 
       assert.lengthOf(errors.field, 2);
-      assert.equal(errors.field.every(function (err) { return err.rule === 'conform'; }), true);
+      assert.equal(errors.field[0].rule, 'conform-0');
+      assert.equal(errors.field[0].result, 'one');
+      assert.equal(errors.field[1].rule, 'conform-1');
+      assert.equal(errors.field[1].result, 'two');
     });
 
     describe('recursion into object trees', function () {

@@ -50,10 +50,14 @@ Corro.prototype.evaluateObject = function (schema, object, key) {
       };
     })
   .reduce(function (acc, r) {
-    return r.result.reduce(function (acc, res) {
+    var isCompound = r.result.length > 1;
+
+    return r.result.reduce(function (acc, res, idx) {
       if (!acc[key]) { acc[key] = []; }
 
-      acc[key].push({rule: r.name, args: schema[r.name], result: res});
+      var name = isCompound ? format('{}-{}', r.name, idx) : r.name;
+
+      acc[key].push({rule: name, args: schema[r.name], result: res});
 
       return acc;
     }, acc);
