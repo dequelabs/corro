@@ -67,6 +67,10 @@ describe('rules', function () {
   describe('format', function () {
     var rule = rules.format;
 
+    it('should pass empty strings', function () {
+        assert.isTrue(rule.func('', 'url'));
+    });
+
     it('should validate urls', function () {
       // not supported:
       assert.isFalse(rule.func('test.com', 'url'));
