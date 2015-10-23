@@ -1,8 +1,11 @@
 {
   "name": "corro",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "A powerful, extensible validation framework for node.js",
-  "keywords": ["validation", "validator"],
+  "keywords": [
+    "validation",
+    "validator"
+  ],
   "license": "MIT",
   "private": false,
   "repository": {
