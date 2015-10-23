@@ -135,6 +135,19 @@ we get a more interesting result:
 }
 ```
 
+### Notes
+#### Arrays
+Any key-value pair in a schema where the value is a plain Object is taken to
+represent a nested value in the validating document -- it's how "scores" is
+distinguished from a hypothetical rule named "scores" in the example above.
+This works out sensibly enough for nested objects, but for arrays it's a little
+weird.
+
+Values representing arrays of objects must contain **only one** non-rule object
+definition. If multiple such definitions are present, Corro will be unable to
+infer which it should use in order to validate the members of the array and so
+will simply add a validation error to that effect.
+
 ## Rules
 Corro ships with a small but flexible set of rules, and you can extend it with
 your own by passing a rule object into the constructor. If one of your rules has
