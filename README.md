@@ -22,6 +22,7 @@ Corro is a powerful, extensible validation framework for node.js.
 		- [type](#type)
 	- [Contributions](#contributions)
 	- [Acknowledgements](#acknowledgements)
+
 <!-- /TOC -->
 
 ## Installation
@@ -66,7 +67,7 @@ var results = corro.validate({
             'test 3'
           ]
         }, value: {
-          type: 'number', // must be a numbers
+          type: 'number', // must be a number
           min: 0,         // must be greater than or equal to 0
           max: 100        // must be less than or equal to 100
         }
@@ -139,7 +140,7 @@ Corro ships with a small but flexible set of rules, and you can extend it with
 your own by passing a rule object into the constructor. If one of your rules has
 the same name as a built-in rule, your version will take precedence.
 
-The rule object is of the form {rulename: [rule block]}, where the rule block
+The rule object is of the form `{rulename: [rule block]}`, where the rule block
 contains the following fields:
 
 **func** (required): The rule function itself. Return true for success, false
