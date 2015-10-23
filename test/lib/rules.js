@@ -153,7 +153,7 @@ describe('rules', function () {
       assert.isFalse(rule.func('test-.com', 'hostname'));
     });
 
-    it('should validate hostnames or ipv4 addresses', function () {
+    it('should validate hostnames or ip addresses', function () {
       assert.isTrue(rule.func('test.com', 'hostnameOrIp'));
       assert.isTrue(rule.func('test-hyphens.com', 'hostnameOrIp'));
       assert.isTrue(rule.func('q.local', 'hostnameOrIp'));
@@ -161,6 +161,8 @@ describe('rules', function () {
       assert.isTrue(rule.func('test', 'hostnameOrIp'));
       assert.isTrue(rule.func('127.0.0.1', 'hostnameOrIp'));
       assert.isTrue(rule.func('2.2.2.2', 'hostnameOrIp'));
+      assert.isTrue(rule.func('0:0:0:0:0:0:0:1', 'hostnameOrIp'));
+      assert.isTrue(rule.func('2001:0db8:85a3:0000:0000:8a2e:0370:7334', 'hostnameOrIp'));
 
       // these next two are false positives due to the hostname regex matching them
       assert.isTrue(rule.func('999.999.999.999', 'hostnameOrIp'));
@@ -436,58 +438,6 @@ describe('rules', function () {
       assert.isTrue(rule.func(new Date(), 'object'));
       assert.isFalse(rule.func(new Date(), 'array'));
       assert.isTrue(rule.func(new Date(), 'date'));
-    });
-  });
-
-  describe('blah', function () {
-    it('should blah', function () {
-      var corro = new Corro();
-      var results = corro.validate({
-          username: {
-            required: true,     // must not be null or undefined
-            notEmpty: true,     // must not be empty or whitespace
-            minLength: 4,       // must be at least 4 characters long
-            maxLength: 20,      // must not be more than 20 characters long
-            match: /^[^\s]+$/   // must not contain any whitespace
-          }, email: {
-            required: true,
-            notEmpty: true,
-            format: 'email'     // must match a defined email format
-          }, bio: {
-            type: 'string',     // if supplied, must be a string
-            conform: [{         // runs all supplied functions
-              func: function (bio) {
-                return bio.indexOf('innovation') > 0;
-              },
-              message: 'bio not sufficiently disruptive to extant paradigms'
-            }]
-          }, scores: {
-            type: 'array',      // if supplied, must be an array
-            minLength: 3,       // if supplied, must contain 3 or more items
-            values: {           // see note about array handling
-              key: {
-                required: true,
-                notEmpty: true,
-                present: [      // must be a member of supplied array
-                  'test 1',
-                  'test 2',
-                  'test 3'
-                ]
-              }, value: {
-                type: 'number', // must be a numbers
-                min: 0,         // must be greater than or equal to 0
-                max: 100        // must be less than or equal to 100
-              }
-            }
-          }
-        }, {
-          username: '',
-          email: 'test',
-          bio: 'hello this is my bio',
-          scores: [{key: 'a test'}]
-        });
-
-        console.log(JSON.stringify(results));
     });
   });
 });

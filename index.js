@@ -69,15 +69,12 @@ Corro.prototype.evaluateObject = function (schema, object, key) {
     }, acc);
   }, {});
 
-  // also bail early if object is falsy since there's not much point checking for children
-  if (!_.isEmpty(result) || !object) { return result; }
-
   if (_.isArray(object) && children.length > 1) {
     // if multiple subschemata exist for an array, we're screwed -- they might conflict, and there's no way to recover. just abort.
     // this is a bit of a structural lacuna, ideally there'd be a recursive 'values' or 'items' rule but there are Problems there
     // in its current state with rule: null this is totally a hack i'm throwing in temporarily. please let it go away quickly
     result[key] = [{rule: null, message: 'multiple array subschemata provided'}];
-  } else {
+  } else if (!!object) {
     result = children.map(function (name) {
       var node = schema[name];
 
