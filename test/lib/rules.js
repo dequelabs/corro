@@ -438,4 +438,56 @@ describe('rules', function () {
       assert.isTrue(rule.func(new Date(), 'date'));
     });
   });
+
+  describe('blah', function () {
+    it('should blah', function () {
+      var corro = new Corro();
+      var results = corro.validate({
+          username: {
+            required: true,     // must not be null or undefined
+            notEmpty: true,     // must not be empty or whitespace
+            minLength: 4,       // must be at least 4 characters long
+            maxLength: 20,      // must not be more than 20 characters long
+            match: /^[^\s]+$/   // must not contain any whitespace
+          }, email: {
+            required: true,
+            notEmpty: true,
+            format: 'email'     // must match a defined email format
+          }, bio: {
+            type: 'string',     // if supplied, must be a string
+            conform: [{         // runs all supplied functions
+              func: function (bio) {
+                return bio.indexOf('innovation') > 0;
+              },
+              message: 'bio not sufficiently disruptive to extant paradigms'
+            }]
+          }, scores: {
+            type: 'array',      // if supplied, must be an array
+            minLength: 3,       // if supplied, must contain 3 or more items
+            values: {           // see note about array handling
+              key: {
+                required: true,
+                notEmpty: true,
+                present: [      // must be a member of supplied array
+                  'test 1',
+                  'test 2',
+                  'test 3'
+                ]
+              }, value: {
+                type: 'number', // must be a numbers
+                min: 0,         // must be greater than or equal to 0
+                max: 100        // must be less than or equal to 100
+              }
+            }
+          }
+        }, {
+          username: '',
+          email: 'test',
+          bio: 'hello this is my bio',
+          scores: [{key: 'a test'}]
+        });
+
+        console.log(JSON.stringify(results));
+    });
+  });
 });

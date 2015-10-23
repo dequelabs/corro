@@ -1,13 +1,23 @@
 {
   "name": "corro",
-  "description": "corro",
   "version": "0.0.1",
-  "private": true,
+  "description": "A powerful, extensible validation framework for node.js",
+  "keywords": ["validation", "validator"],
+  "license": "MIT",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:dmfay/corro.git"
+  },
   "author": {
-    "name": "Dian Fay"
+    "name": "Dian M Fay",
+    "email": "dian.m.fay@gmail.com"
   },
   "engines": {
     "node": "4.1.1"
+  },
+  "scripts": {
+    "test": "mocha"
   },
   "dependencies": {
     "lodash": "^3.10.1",

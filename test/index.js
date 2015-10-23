@@ -165,6 +165,25 @@ describe('Corro', function () {
       assert.equal(errors.field[1].result, 'two');
     });
 
+    it('should only include args in result if the rule allows it', function () {
+        var result = new Corro({
+          rule: {
+            func: function (val, len) {
+              return val.length > len;
+            },
+            message: 'message',
+            includeArgs: false
+          }
+        }).evaluateObject({
+          field: {
+            rule: [10]
+          }
+        }, {field: 'not 10'});
+
+        assert.lengthOf(result.field, 1);
+        assert.isUndefined(result.field[0].args);
+    });
+
     it('should not run rules that don\'t exist', function () {
       var errors = new Corro().evaluateObject({
         slithy: true

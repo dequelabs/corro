@@ -58,8 +58,12 @@ Corro.prototype.evaluateObject = function (schema, object, key) {
       if (!acc[key]) { acc[key] = []; }
 
       var name = isCompound ? format('{}-{}', r.name, idx) : r.name;
+      var ruleResult = {rule: name, result: res};
+      if (!!self.rules[name] && self.rules[name].includeArgs !== false) {
+        ruleResult.args = schema[r.name];
+      }
 
-      acc[key].push({rule: name, args: schema[r.name], result: res});
+      acc[key].push(ruleResult);
 
       return acc;
     }, acc);
