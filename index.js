@@ -14,11 +14,25 @@ var Corro = function (rules) {
   return this;
 };
 
-Corro.prototype.runRule = function (rule, val, args) {
+Corro.prototype.runRule = function (ctx, rule, val, args) {
+  // if we've been given a name instead of a rule block (from eg conform), look
+  // it up and set up the args we're going to pass. rules passed as blocks can't
+  // take args anyway.
+  if (!_.isPlainObject(rule)) {
+    if (!!this.rules[rule]) {
+      rule = this.rules[rule];
+    } else {
+      return ['invalid rule specified'];
+    }
+  }
+
   if (rule.alwaysRun || (val !== null && val !== undefined)) {
     if (rule.argArray) { args = [args]; }
 
-    var result = rule.func.apply(this, [val].concat(args || []));
+    var result = rule.func.apply({
+      runRule: this.runRule,
+      context: ctx
+    }, [val].concat(args || []));
 
     if (_.isBoolean(result) && !result) {
       return [format.apply(this, [rule.message].concat(args))];
@@ -30,7 +44,7 @@ Corro.prototype.runRule = function (rule, val, args) {
   return [];
 };
 
-Corro.prototype.evaluateObject = function (schema, object, key) {
+Corro.prototype.evaluateObject = function (ctx, schema, object, key) {
   var self = this;
   var rules = [], children = [];
 
@@ -48,7 +62,7 @@ Corro.prototype.evaluateObject = function (schema, object, key) {
   var result = rules.map(function (name) {
     return {
       name: name,
-      result: !!self.rules[name] ? self.runRule(self.rules[name], object, schema[name]) : ['invalid rule specified']
+      result: self.runRule(ctx, name, object, schema[name])
     };
   })
   .reduce(function (acc, r) {
@@ -79,12 +93,12 @@ Corro.prototype.evaluateObject = function (schema, object, key) {
 
       if (_.isArray(object)) {
         return object.map(function (element, idx) {
-          return self.evaluateObject(node, element, key + '.' + idx);
+          return self.evaluateObject(object, node, element, key + '.' + idx);
         });
       } else {
         var child = key ? key + '.' + name : name;
 
-        return [self.evaluateObject(node, object[name], child)];
+        return [self.evaluateObject(object, node, object[name], child)];
       }
     })
     .reduce(function (acc, arr) {
@@ -98,7 +112,7 @@ Corro.prototype.evaluateObject = function (schema, object, key) {
 };
 
 Corro.prototype.validate = function (schema, obj) {
-  var results = this.evaluateObject(schema, obj);
+  var results = this.evaluateObject(obj, schema, obj);
 
   return {
     valid: Object.keys(results).length === 0,

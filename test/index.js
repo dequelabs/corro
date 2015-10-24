@@ -42,28 +42,28 @@ describe('Corro', function () {
     });
 
     it('should return an empty array on success', function () {
-      assert.lengthOf(new Corro().runRule({
+      assert.lengthOf(new Corro().runRule({field: true}, {
         func: function (val) { return !!val; },
         message: 'message'
       }, true), 0);
     });
 
     it('should return the rule message on failure', function () {
-      assert.deepEqual(new Corro().runRule({
+      assert.deepEqual(new Corro().runRule({field: false}, {
         func: function (val) { return !!val; },
         message: 'message'
       }, false), ['message']);
     });
 
     it('should not execute rules without alwaysRun on null values', function () {
-      assert.lengthOf(new Corro().runRule({
+      assert.lengthOf(new Corro().runRule({field: null}, {
         func: function (val) { return val !== null; },
         message: 'message'
       }, null), 0);
     });
 
     it('should execute rules with alwaysRun on null values', function () {
-      assert.deepEqual(new Corro().runRule({
+      assert.deepEqual(new Corro().runRule({field: null}, {
         func: function (val) { return val !== null; },
         alwaysRun: true,
         message: 'message'
@@ -71,60 +71,115 @@ describe('Corro', function () {
     });
 
     it('should not execute rules without alwaysRun on undefined values', function () {
-      assert.lengthOf(new Corro().runRule({
+      assert.lengthOf(new Corro().runRule({}, {
         func: function (val) { return val !== undefined; },
         message: 'message'
       }), 0);
     });
 
     it('should execute rules with alwaysRun on undefined values', function () {
-      assert.deepEqual(new Corro().runRule({
+      assert.deepEqual(new Corro().runRule({}, {
         func: function (val) { return val !== undefined; },
         alwaysRun: true,
         message: 'message'
       }), ['message']);
     });
 
-    it('should pass arg values to rules', function () {
-      var called = false;
+    describe('rules passed as names', function () {
+      it('should be able to access runRule and the context block', function () {
+        var ctx = {field: true, otherfield: 'hi'};
+        var called = false;
 
-      assert.lengthOf(new Corro().runRule({
-        func: function (val, len) {
-          assert.equal(val, 'this is longer than ten characters');
-          assert.equal(len, 10);
-          called = true;
+        assert.lengthOf(new Corro({
+          rule: {
+            func: function (val) {
+              assert.isFunction(this.runRule);
+              assert.deepEqual(this.context, ctx);
+              called = true;
 
-          return val.length > len;
-        },
-        message: 'message'
-      }, 'this is longer than ten characters', [10]), 0);
+              return !!val;
+            },
+            message: 'message'
+          }
+        }).runRule(ctx, 'rule', true), 0);
 
-      assert.isTrue(called);
+        assert.isTrue(called);
+      });
+
+      it('should pass the relevant portion of the supplied schema as args', function () {
+        var called = false;
+
+        assert.lengthOf(new Corro({
+          rule: {
+            func: function (val, len) {
+              assert.equal(val, 'this is longer than ten characters');
+              assert.equal(len, 10);
+              called = true;
+
+              return val.length > len;
+            },
+            message: 'message'
+          }
+        }).runRule({field: 'this is longer than ten characters'}, 'rule', 'this is longer than ten characters', [10]), 0);
+
+        assert.isTrue(called);
+      });
+
+      it('should preserve arg arrays', function () {
+        var called = false;
+
+        assert.lengthOf(new Corro({
+          rule: {
+            func: function (val, arr) {
+              assert.isArray(arr);
+
+              called = true;
+
+              return arr.indexOf(val) > -1;
+            },
+            argArray: true,
+            message: 'message'
+          }
+        }).runRule({field: 'hi'}, 'rule', 'hi',['hi', 'hello']), 0);
+
+        assert.isTrue(called);
+      });
+
+      it('should interpolate args into messages', function () {
+        assert.equal(new Corro({
+          rule: {
+            func: function (val, len) { return val.length > len; },
+            message: 'must be longer than {0} characters'
+          }
+        }).runRule({field: 'hi'}, 'rule', 'hi', [10]), 'must be longer than 10 characters');
+      });
+
+      it('should not run rules that don\'t exist', function () {
+        assert.deepEqual(new Corro().runRule({}, 'slithy', 'test', 'field'), ['invalid rule specified']);
+      });
     });
 
-    it('should preserve arg arrays if the rule definition requires it', function () {
-      var called = false;
+    describe('rules passed as blocks', function () {
+      it('should be able to access runRule and the context block', function () {
+        var ctx = {field: true, otherfield: 'hi'};
+        var called = false;
 
-      assert.lengthOf(new Corro().runRule({
-        func: function (val, arr) {
-          assert.isArray(arr);
+        assert.lengthOf(new Corro().runRule(
+          ctx,
+          {
+            func: function (val) {
+              assert.isFunction(this.runRule);
+              assert.deepEqual(this.context, ctx);
+              called = true;
 
-          called = true;
+              return !!val;
+            },
+            message: 'message'
+          },
+          true), 0);
 
-          return arr.indexOf(val) > -1;
-        },
-        argArray: true,
-        message: 'message'
-      }, 'hello', ['hi', 'hello']), 0);
-
-      assert.isTrue(called);
-    });
-
-    it('should interpolate args into messages', function () {
-      assert.equal(new Corro().runRule({
-        func: function (val, len) { return val.length > len; },
-        message: 'must be longer than {0} characters'
-      }, 'hi', [10]), 'must be longer than 10 characters');
+        assert.isTrue(called);
+      });
     });
   });
 
@@ -134,13 +189,13 @@ describe('Corro', function () {
     });
 
     it('should return an empty object if all rules pass', function () {
-      var errors = new Corro().evaluateObject({required: true}, 'value', 'field');
+      var errors = new Corro().evaluateObject({field: 'value'}, {required: true}, 'value', 'field');
 
       assert.lengthOf(Object.keys(errors), 0);
     });
 
     it('should return an object with field errors if rules fail', function () {
-      var errors = new Corro().evaluateObject({required: true}, null, 'field');
+      var errors = new Corro().evaluateObject({field: null}, {required: true}, null, 'field');
 
       assert.lengthOf(Object.keys(errors), 1);
       assert.equal(errors.field[0].rule, 'required');
@@ -148,7 +203,7 @@ describe('Corro', function () {
     });
 
     it('should explode multiple result messages', function () {
-      var errors = new Corro().evaluateObject({
+      var errors = new Corro().evaluateObject({field: 'test'}, {
         conform: [{
           func: function (val) { return val !== 'test'; },
           message: 'one'
@@ -174,91 +229,96 @@ describe('Corro', function () {
             message: 'message',
             includeArgs: false
           }
-        }).evaluateObject({
-          field: {
-            rule: [10]
-          }
-        }, {field: 'not 10'});
+        }).evaluateObject(
+          {field: 'not 10'},
+          {rule: [10]},
+          'not 10',
+          'field');
 
         assert.lengthOf(result.field, 1);
         assert.isUndefined(result.field[0].args);
     });
 
-    it('should not run rules that don\'t exist', function () {
-      var errors = new Corro().evaluateObject({
-        slithy: true
-      }, 'test', 'field');
-
-      assert.lengthOf(errors.field, 1);
-      assert.equal(errors.field[0].rule, 'slithy');
-      assert.equal(errors.field[0].result, 'invalid rule specified');
-    });
-
     describe('recursion into object trees', function () {
       it('should validate nested objects', function () {
-        var errors = new Corro().evaluateObject({
-          obj: {
-            required: true,
-            field: {
-              required: true
+        var errors = new Corro().evaluateObject(
+          {obj: {field: 'value'}},
+          {
+            obj: {
+              required: true,
+              field: {
+                required: true
+              }
             }
-          }
-        }, {obj: {field: 'value'}});
+          },
+          {obj: {field: 'value'}}); // no key because we're simulating a top-level parent
 
         assert.lengthOf(Object.keys(errors), 0);
       });
 
       it('should return an error if a problem is found deeper in the tree', function () {
-        var errors = new Corro().evaluateObject({
-          obj: {
-            required: true,
-            field: {
-              required: true
+        var errors = new Corro().evaluateObject(
+          {obj: {}},
+          {
+            obj: {
+              required: true,
+              field: {
+                required: true
+              }
             }
-          }
-        }, {obj: {}});
+          },
+          {obj: {}}); // no key because we're simulating a top-level parent
 
         assert.lengthOf(Object.keys(errors), 1);
         assert.isOk(errors['obj.field']);
       });
 
       it('should abort gracefully for nulls', function () {
-        var errors = new Corro().evaluateObject({
-          obj: {
-            field: {
-              minLength: 10
+        var errors = new Corro().evaluateObject(
+          {obj: null},
+          {
+            obj: {
+              field: {
+                minLength: 10
+              }
             }
-          }
-        }, {obj: null});
+          },
+          {obj: null}); // no key because we're simulating a top-level parent
 
         assert.lengthOf(Object.keys(errors), 0);
       });
 
       it('should abort as gracefully as possible for wrong types', function () {
-        var errors = new Corro().evaluateObject({
-          obj: {
-            field: {
-              subfield: {
-                required: true
+        var errors = new Corro().evaluateObject(
+          {obj: 'stop here'},
+          {
+            obj: {
+              field: {
+                subfield: {
+                  required: true
+                }
               }
             }
-          }
-        }, {obj: 'subfield is not accessible at all'});
+          },
+          {obj: 'stop here'}); // no key because we're simulating a top-level parent
 
         assert.lengthOf(Object.keys(errors), 0);
       });
 
       it('will return errors if an immediate property of a wrong-typed object triggers an error', function () {
-        var errors = new Corro().evaluateObject({
-          obj: {
-            field: {
-              required: true,
-              subfield: {
-                required: true
+        var errors = new Corro().evaluateObject(
+          {obj: 'stop here'},
+          {
+            obj: {
+              field: {
+                required: true,
+                subfield: {
+                  required: true
+                }
               }
             }
-          }
-        }, {obj: 'subfield is not accessible at all'});
+          },
+          {obj: 'stop here'}); // no key because we're simulating a top-level parent
 
         assert.lengthOf(Object.keys(errors), 1);
       });
@@ -266,107 +326,130 @@ describe('Corro', function () {
 
     describe('recursion into array elements', function () {
       it('should pass arrays where all simple values conform', function () {
-        var errors = new Corro().evaluateObject({
-          array: {
-            required: true,
-            values: {required: true}
-          }
-        }, {array: ['one', 'two']});
+        var errors = new Corro().evaluateObject(
+          {array: ['one', 'two']},
+          {
+            array: {
+              required: true,
+              values: {required: true}
+            }
+          },
+          {array: ['one', 'two']});
 
         assert.lengthOf(Object.keys(errors), 0);
       });
 
       it('should pass arrays where all complex values conform', function () {
-        var errors = new Corro().evaluateObject({
-          array: {
-            required: true,
-            values: {
+        var errors = new Corro().evaluateObject(
+          {array: [{field: 'value'}]},
+          {
+            array: {
               required: true,
-              field: {
-                required: true
+              values: {
+                required: true,
+                field: {
+                  required: true
+                }
               }
             }
-          }
-        }, {array: [{field: 'value'}]});
+          },
+          {array: [{field: 'value'}]});
 
         assert.lengthOf(Object.keys(errors), 0);
       });
 
       it('should fail individual nonconforming elements', function () {
-        var errors = new Corro().evaluateObject({
-          array: {
-            required: true,
-            values: {required: true}
-          }
-        }, {array: ['one', 'two', null]});
+        var errors = new Corro().evaluateObject(
+          {array: ['one', 'two', null]},
+          {
+            array: {
+              required: true,
+              values: {required: true}
+            }
+          },
+          {array: ['one', 'two', null]});
 
         assert.lengthOf(Object.keys(errors), 1);
         assert.isOk(errors['array.2'], 1);
       });
 
       it('should fail individual nonconforming complex elements', function () {
-        var errors = new Corro().evaluateObject({
-          array: {
-            required: true,
-            values: {
+        var errors = new Corro().evaluateObject(
+          {array: [{notfield: 'value'}]},
+          {
+            array: {
               required: true,
-              field: {
-                required: true
+              values: {
+                required: true,
+                field: {
+                  required: true
+                }
               }
             }
-          }
-        }, {array: [{notfield: 'value'}]});
+          },
+          {array: [{notfield: 'value'}]});
 
         assert.lengthOf(Object.keys(errors), 1);
         assert.isOk(errors['array.0.field'], 1);
       });
 
       it('should abort gracefully for nulls', function () {
-        var errors = new Corro().evaluateObject({
-          array: {
-            values: {required: true}  // kind of a weird way of saying this array may not contain null/undefined
-          }
-        }, {array: null});
+        var errors = new Corro().evaluateObject(
+          {array: null},
+          {
+            array: {
+              values: {required: true}  // kind of a weird way of saying this array may not contain null/undefined
+            }
+          },
+          {array: null});
 
         assert.lengthOf(Object.keys(errors), 0);
       });
 
       it('should abort as gracefully as possible for wrong types', function () {
-        var errors = new Corro().evaluateObject({
-          array: {
-            values: {
-              field: {required: true}
+        var errors = new Corro().evaluateObject(
+          {array: 'this is not an array'},
+          {
+            array: {
+              values: {
+                field: {required: true}
+              }
             }
-          }
-        }, {array: 'this is not an array'});
+          },
+          {array: 'this is not an array'});
 
         assert.lengthOf(Object.keys(errors), 0);
       });
 
       it('will return errors if an immediate property of a wrong-typed object triggers an error', function () {
-        var errors = new Corro().evaluateObject({
-          array: {
-            values: {
-              required: true,
-              field: {required: true}
+        var errors = new Corro().evaluateObject(
+          {array: 'this is not an array'},
+          {
+            array: {
+              values: {
+                required: true,
+                field: {required: true}
+              }
             }
-          }
-        }, {array: 'this is not an array'});
+          },
+          {array: 'this is not an array'});
 
         assert.lengthOf(Object.keys(errors), 1);
       });
 
-      it('should abort and fail if multiple subschemata provided', function () {
-        var result = new Corro().validate({
-          array: {
-            required: true,
-            values: {required: true},
-            values2: {required: true}
-          }
-        }, {array: ['one', 'two']});
+      it('should return an error if multiple subschemata provided', function () {
+        var result = new Corro().evaluateObject(
+          {array: ['one', 'two']},
+          {
+            array: {
+              required: true,
+              values: {required: true},
+              values2: {required: true}
+            }
+          },
+          {array: ['one', 'two']});
 
-        assert.isFalse(result.valid);
-        assert.lengthOf(result.errors.array, 1);
+        assert.lengthOf(result.array, 1);
       });
     });
 	});
@@ -396,6 +479,90 @@ describe('Corro', function () {
       assert.isFalse(result.valid);
       assert.lengthOf(Object.keys(result.errors), 1);
       assert.isOk(result.errors.field);
+    });
+
+    it('should run the example', function () {
+      var corro = new Corro();
+      var results = corro.validate({
+          username: {
+            required: true,     // must not be null or undefined
+            notEmpty: true,     // must not be empty or whitespace
+            minLength: 4,       // must be at least 4 characters long
+            maxLength: 20,      // must not be more than 20 characters long
+            match: /^[^\s]+$/   // must not contain any whitespace
+          }, email: {
+            required: true,
+            notEmpty: true,
+            format: 'email'     // must match a defined email format
+          }, bio: {
+            type: 'string',     // if supplied, must be a string
+            conform: [{         // runs all supplied functions
+              func: function (bio) {
+                return bio.indexOf('innovation') > 0;
+              },
+              message: 'not sufficiently disruptive to extant paradigms'
+            }]
+          }, scores: {
+            type: 'array',      // if supplied, must be an array
+            minLength: 3,       // if supplied, must contain 3 or more items
+            values: {           // see note about array handling
+              key: {
+                required: true,
+                notEmpty: true,
+                present: [      // must be a member of supplied array
+                  'test 1',
+                  'test 2',
+                  'test 3'
+                ]
+              }, value: {
+                type: 'number', // must be a number
+                min: 0,         // must be greater than or equal to 0
+                max: 100        // must be less than or equal to 100
+              }
+            }
+          }
+        }, {
+          username: '',
+          email: 'test',
+          bio: 'hello this is my bio',
+          scores: [{key: 'a test'}]
+        });
+
+      assert.deepEqual(results, {
+        valid: false,
+        errors: {
+          username: [{
+              rule: 'notEmpty',
+              result: 'cannot be blank'
+            }, {
+              rule: 'minLength',
+              result: 'is too short',
+              args: 4
+            }, {
+              rule: 'match',
+              result: 'does not match supplied pattern'
+            }],
+          email: [{
+              rule: 'format',
+              result: 'expected format email',
+              args: 'email'
+            }],
+          bio: [{
+              rule: 'conform',
+              result: 'not sufficiently disruptive to extant paradigms'
+            }],
+          scores: [{
+              rule: 'minLength',
+              result: 'is too short',
+              args: 3
+            }],
+          'scores.0.key': [{
+              rule: 'present',
+              result: 'not in allowed values',
+              args: [ 'test 1', 'test 2', 'test 3' ]
+            }]
+        }
+      });
     });
   });
 });

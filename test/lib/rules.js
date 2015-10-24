@@ -7,9 +7,10 @@ var rules = require('../../lib/rules.js');
 describe('rules', function () {
   describe('conform', function () {
     var rule = rules.conform;
+    var ctx = {runRule: new Corro().runRule};
 
     it('should pass values passed by dependent rules', function () {
-      assert.isTrue(rule.func.apply(new Corro(), [
+      assert.isTrue(rule.func.apply(ctx, [
         'test',
         {
           func: function (val) { return val === 'test'; },
@@ -19,7 +20,7 @@ describe('rules', function () {
     });
 
     it('should fail values failed by dependent rules', function () {
-      assert.deepEqual(rule.func.apply(new Corro(), [
+      assert.deepEqual(rule.func.apply(ctx, [
         'test',
         {
           func: function (val) { return val !== 'test'; },
@@ -28,7 +29,7 @@ describe('rules', function () {
     });
 
     it('should compile a litany of failures', function () {
-      assert.deepEqual(rule.func.apply(new Corro(), [
+      assert.deepEqual(rule.func.apply(ctx, [
         'test',
         {
           func: function (val) { return val !== 'test'; },
@@ -40,7 +41,7 @@ describe('rules', function () {
     });
 
     it('should exclude messages from successful dependent rules', function () {
-      assert.deepEqual(rule.func.apply(new Corro(), [
+      assert.deepEqual(rule.func.apply(ctx, [
         'test',
         {
           func: function (val) { return val === 'test'; },
@@ -49,6 +50,30 @@ describe('rules', function () {
           func: function (val) { return val === 'no'; },
           message: 'two'
         }]), ['two']);
+    });
+
+    it('should pass the context to dependent rules', function () {
+      var called = false;
+
+      ctx.context = {
+        field: 'test',
+        otherfield: 'hello'
+      };
+
+      assert.isTrue(rule.func.apply(ctx, [
+        'test',
+        {
+          func: function (val) {
+            assert.deepEqual(this.context, ctx.context);
+            called = true;
+
+            return val === 'test';
+          },
+          message: 'dummy'
+        }
+      ]));
+
+      assert.isTrue(called);
     });
   });
 
@@ -394,6 +419,13 @@ describe('rules', function () {
 
     it('should fail undefined', function () {
       assert.isFalse(rule.func(undefined));
+    });
+
+    it('should pass anything if a dependency is supplied which does not itself pass', function () {
+      assert.isTrue(rule.func.apply({context: {field: null, dependency: null}}, [null, 'dependency']));
+      assert.isTrue(rule.func.apply({context: {field: true, dependency: null}}, [true, 'dependency']));
+      assert.isFalse(rule.func.apply({context: {field: null, dependency: true}}, [null, 'dependency']));
+      assert.isTrue(rule.func.apply({context: {field: true, dependency: true}}, [true, 'dependency']));
     });
 	});
 
