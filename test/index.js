@@ -438,22 +438,26 @@ describe('Corro', function () {
         assert.lengthOf(Object.keys(errors), 1);
       });
 
-      it('will happily evaluate multiple array subschemata for each element and let the last one win', function () {
+      it('will evaluate multiple element subschemata if provided', function () {
         var result = new Corro().evaluateObject(
-          {array: ['one', 'two']},
+          {array: ['one', 'two', 'three']},
           {
             array: {
               required: true,
-              values: {minLength: 5},
-              values2: {maxLength: 2}
+              values: {minLength: 10},  // nothing passes this
+              values2: {maxLength: 4}   // 'one' and 'two' pass, 'three' doesn't
             }
           },
-          {array: ['one', 'two']});
+          {array: ['one', 'two', 'three']});
 
-        assert.lengthOf(result['array.0'], 1);
-        assert.equal(result['array.0'][0].rule, 'maxLength');
-        assert.lengthOf(result['array.1'], 1);
-        assert.equal(result['array.1'][0].rule, 'maxLength');
+        assert.deepEqual(result, {
+          'array.0': [ { rule: 'minLength', result: 'is too short', args: 10 } ],
+          'array.1': [ { rule: 'minLength', result: 'is too short', args: 10 } ],
+          'array.2': [
+            { rule: 'minLength', result: 'is too short', args: 10 },
+            { rule: 'maxLength', result: 'is too long', args: 4 }
+          ]
+        });
       });
     });
 	});

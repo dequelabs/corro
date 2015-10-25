@@ -69,7 +69,10 @@ Corro.prototype.evaluateObject = function (ctx, schema, object, name) {
     } else if (!!object) {  // child object
       if (_.isArray(object)) {
         return object.map(function (element, idx) {
-          _.merge(result, self.evaluateObject(object, val, element, name + '.' + idx));
+          _.merge(result, self.evaluateObject(object, val, element, name + '.' + idx), function (a, b) {
+            if (_.isArray(a)) { return a.concat(b); }
+            return b;
+          });
         });
       } else {
         var child = name ? name + '.' + key : key;

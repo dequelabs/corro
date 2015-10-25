@@ -3,7 +3,7 @@
 
 Corro is a powerful, extensible validation framework for node.js.
 
-<!-- TOC depth:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+<!-- TOC depth:6 withLinks:1 updateOnSave:0 orderedList:0 -->
 
 - [Corro](#corro)
 	- [Installation](#installation)
@@ -25,6 +25,7 @@ Corro is a powerful, extensible validation framework for node.js.
 		- [type](#type)
 	- [Contributions](#contributions)
 	- [Acknowledgements](#acknowledgements)
+
 <!-- /TOC -->
 
 ## Installation
@@ -152,10 +153,10 @@ distinguished from a hypothetical rule named "scores" in the example above.
 This works out sensibly enough for nested objects, but for arrays it's a little
 weird.
 
-Values representing arrays of objects must contain **only one** non-rule object
-definition. If multiple such definitions are present, Corro will be unable to
-infer which it should use in order to validate the members of the array and so
-will simply add a validation error to that effect.
+Values representing arrays of objects should contain **only one** non-rule key
+whose value represents the schema for elements in the array. There isn't
+anything preventing you from passing multiple definitions, and Corro will apply
+each of them in turn and safely merge the results, but it can't be recommended.
 
 ## Rules
 Corro ships with a small but flexible set of rules, and you can extend it with
