@@ -46,41 +46,37 @@ Corro.prototype.evaluateObject = function (ctx, schema, object, key) {
   var self = this;
   var rules = [], children = [];
 
-  for (var k in schema) {
-    if (schema.hasOwnProperty(k) && schema[k]) {    // skip stuff like required: false
-      if (!_.isPlainObject(schema[k])) { rules.push(k);}
-      else { children.push(k); }
+  _.forOwn(schema, function (val, key) {
+    if (!!val) {    // skip stuff like required: false
+      if (!_.isPlainObject(val)) { rules.push(key);}
+      else { children.push(key); }
     }
-  }
+  });
 
-  // run rules first, so we can exit early if we're missing required subobjects or have wrong types or whatever
   var result = rules.map(function (name) {
-    return {
-      name: name,
+    var r = {
+      rule: name,
       result: self.runRule(ctx, name, object, schema[name])
     };
+
+    if (self.rules[name].includeArgs !== false) { r.args = schema[name]; }
+
+    return r;
   })
   .reduce(function (acc, r) {
-    var i = 0, len = r.result.length;
-    var name = r.name, rule = self.rules[r.name];
-    var row;
+    var len = r.result.length;
 
     if (len === 0) { return acc; }
 
-    acc[key] = acc[key] || [];
+    var name = r.rule;
+    var formatStr = len > 1 ? '{}-{}' : '{}';
 
-    for (i; i < len; i++) {
-      row = {
-        rule: len === 1 ? name : format('{}-{}', r.name, i),
-        result: r.result[i]
-      };
+    acc[key] = (acc[key] || []).concat(r.result.map(function (res, idx) {
+      r.rule = format(formatStr, name, idx);
+      r.result = res;
 
-      if (!!rule && rule.includeArgs !== false) {
-        row.args = schema[r.name];
-      }
-
-      acc[key].push(row);
-    }
+      return _.clone(r);
+    }));
 
     return acc;
   }, {});
