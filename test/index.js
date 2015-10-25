@@ -258,19 +258,20 @@ describe('Corro', function () {
 
       it('should return an error if a problem is found deeper in the tree', function () {
         var errors = new Corro().evaluateObject(
-          {obj: {}},
+          {parent: {obj: {}}},
           {
-            obj: {
-              required: true,
-              field: {
-                required: true
+            parent: {
+              obj: {
+                field: {
+                  required: true
+                }
               }
             }
           },
-          {obj: {}}); // no key because we're simulating a top-level parent
+          {parent: {obj: {}}}); // no key because we're simulating a top-level parent
 
         assert.lengthOf(Object.keys(errors), 1);
-        assert.isOk(errors['obj.field']);
+        assert.isOk(errors['parent.obj.field']);
       });
 
       it('should abort gracefully for nulls', function () {
@@ -370,7 +371,7 @@ describe('Corro', function () {
           {array: ['one', 'two', null]});
 
         assert.lengthOf(Object.keys(errors), 1);
-        assert.isOk(errors['array.2'], 1);
+        assert.isOk(errors['array.2']);
       });
 
       it('should fail individual nonconforming complex elements', function () {
@@ -437,19 +438,22 @@ describe('Corro', function () {
         assert.lengthOf(Object.keys(errors), 1);
       });
 
-      it('should return an error if multiple subschemata provided', function () {
+      it('will happily evaluate multiple array subschemata for each element and let the last one win', function () {
         var result = new Corro().evaluateObject(
           {array: ['one', 'two']},
           {
             array: {
               required: true,
-              values: {required: true},
-              values2: {required: true}
+              values: {minLength: 5},
+              values2: {maxLength: 2}
             }
           },
           {array: ['one', 'two']});
 
-        assert.lengthOf(result.array, 1);
+        assert.lengthOf(result['array.0'], 1);
+        assert.equal(result['array.0'][0].rule, 'maxLength');
+        assert.lengthOf(result['array.1'], 1);
+        assert.equal(result['array.1'][0].rule, 'maxLength');
       });
     });
 	});

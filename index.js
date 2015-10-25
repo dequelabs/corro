@@ -42,73 +42,42 @@ Corro.prototype.runRule = function (ctx, rule, val, args) {
   return [];
 };
 
-Corro.prototype.evaluateObject = function (ctx, schema, object, key) {
+Corro.prototype.evaluateObject = function (ctx, schema, object, name) {
   var self = this;
-  var rules = [], children = [];
 
-  _.forOwn(schema, function (val, key) {
-    if (!!val) {    // skip stuff like required: false
-      if (!_.isPlainObject(val)) { rules.push(key);}
-      else { children.push(key); }
-    }
-  });
+  return _.transform(schema, function (result, val, key) {
+    if (!_.isPlainObject(val)) {  // rule
+      var res = {
+        rule: key,
+        result: self.runRule(ctx, key, object, schema[key])
+      };
 
-  var result = rules.map(function (name) {
-    var r = {
-      rule: name,
-      result: self.runRule(ctx, name, object, schema[name])
-    };
+      var len = res.result.length;
 
-    if (self.rules[name].includeArgs !== false) { r.args = schema[name]; }
+      if (len > 0) {
+        if (self.rules[key].includeArgs !== false) { res.args = schema[key]; }
 
-    return r;
-  })
-  .reduce(function (acc, r) {
-    var len = r.result.length;
+        var formatStr = len > 1 ? '{}-{}' : '{}';
 
-    if (len === 0) { return acc; }
+        result[name] = (result[name] || []).concat(res.result.map(function (r, idx) {
+          res.rule = format(formatStr, key, idx);
+          res.result = r;
 
-    var name = r.rule;
-    var formatStr = len > 1 ? '{}-{}' : '{}';
-
-    acc[key] = (acc[key] || []).concat(r.result.map(function (res, idx) {
-      r.rule = format(formatStr, name, idx);
-      r.result = res;
-
-      return _.clone(r);
-    }));
-
-    return acc;
-  }, {});
-
-  if (_.isArray(object) && children.length > 1) {
-    // if multiple subschemata exist for an array, we're screwed -- they might conflict, and there's no way to recover. just abort.
-    // this is a bit of a structural lacuna, ideally there'd be a recursive 'values' or 'items' rule but there are Problems there
-    result[key] = [{message: 'multiple array subschemata provided'}];
-  } else if (!!object) {
-    result = children.map(function (name) {
-      var node = schema[name];
-
+          return _.clone(res);
+        }));
+      }
+    } else if (!!object) {  // child object
       if (_.isArray(object)) {
         return object.map(function (element, idx) {
-          return self.evaluateObject(object, node, element, key + '.' + idx);
+          _.merge(result, self.evaluateObject(object, val, element, name + '.' + idx));
         });
       } else {
-        var child = key ? key + '.' + name : name;
+        var child = name ? name + '.' + key : key;
 
-        return [self.evaluateObject(object, node, object[name], child)];
+        _.merge(result, self.evaluateObject(object, val, object[key], child));
       }
-    })
-    .reduce(function (acc, arr) {
-      var i = 0, len = arr.length;
-
-      for (i; i < len; i++) { _.merge(acc, arr[i]); }
-
-      return acc;
-    }, result);
-  }
-
-  return result;
+    }
+  });
 };
 
 Corro.prototype.validate = function (schema, obj) {
