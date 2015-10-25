@@ -143,8 +143,8 @@ we get a more interesting result:
 When evaluating the schema, rules with falsy arguments will be passed over. This
 allows for conditionally or temporarily turning rules off by setting eg
 `required: false` instead of `required: true`, but also means that custom rules
-should always be phrased as positive expressions as construction such as
-`allowX: false` will never catch Xs that should not be present.
+should always be phrased as positive expressions, since constructions such as
+`allowX: false` will never execute.
 
 #### Arrays
 Any key-value pair in a schema where the value is a plain Object is taken to
@@ -161,7 +161,7 @@ each of them in turn and safely merge the results, but it can't be recommended.
 ## Rules
 Corro ships with a small but flexible set of rules, and you can extend it with
 your own by passing a rule object into the constructor. If one of your rules has
-the same name as a built-in rule, your version will take precedence.
+the same name as a built-in rule, your implementation will override the default.
 
 The rule object is of the form `{rulename: [rule block]}`, where the rule block
 contains the following fields:
