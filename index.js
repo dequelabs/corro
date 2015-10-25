@@ -17,11 +17,9 @@ var Corro = function (rules) {
 Corro.prototype.runRule = function (ctx, rule, val, args) {
   // if we've been given a name instead of a rule block (from eg conform), look it up
   if (!_.isPlainObject(rule)) {
-    if (!!this.rules[rule]) {
-      rule = this.rules[rule];
-    } else {
-      return ['invalid rule specified'];
-    }
+    rule = this.rules[rule];
+
+    if (!rule) { return ['invalid rule specified']; }
   }
 
   if (rule.alwaysRun || (val !== null && val !== undefined)) {
@@ -34,7 +32,7 @@ Corro.prototype.runRule = function (ctx, rule, val, args) {
 
     if (_.isBoolean(result) && !result) {
       return [format.apply(this, [rule.message].concat(args))];
-    } else if (_.isArray(result)) {
+    } else if (_.isArray(result)) { // message array from conform
       return result;
     }
   }
@@ -49,13 +47,13 @@ Corro.prototype.evaluateObject = function (ctx, schema, object, name) {
     if (!_.isPlainObject(val)) {  // rule
       var res = {
         rule: key,
-        result: self.runRule(ctx, key, object, schema[key])
+        result: self.runRule(ctx, key, object, val)
       };
 
       var len = res.result.length;
 
       if (len > 0) {
-        if (self.rules[key].includeArgs !== false) { res.args = schema[key]; }
+        if (self.rules[key].includeArgs !== false) { res.args = val; }
 
         var formatStr = len > 1 ? '{}-{}' : '{}';
 
@@ -69,10 +67,13 @@ Corro.prototype.evaluateObject = function (ctx, schema, object, name) {
     } else if (!!object) {  // child object
       if (_.isArray(object)) {
         return object.map(function (element, idx) {
-          _.merge(result, self.evaluateObject(object, val, element, name + '.' + idx), function (a, b) {
-            if (_.isArray(a)) { return a.concat(b); }
-            return b;
-          });
+          _.merge(
+            result,
+            self.evaluateObject(object, val, element, name + '.' + idx),
+            function (a, b) {
+              if (_.isArray(a)) { return a.concat(b); } // merge all results if multiple subschemata provided
+              return b;
+            });
         });
       } else {
         var child = name ? name + '.' + key : key;
