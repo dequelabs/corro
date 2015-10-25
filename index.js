@@ -15,9 +15,7 @@ var Corro = function (rules) {
 };
 
 Corro.prototype.runRule = function (ctx, rule, val, args) {
-  // if we've been given a name instead of a rule block (from eg conform), look
-  // it up and set up the args we're going to pass. rules passed as blocks can't
-  // take args anyway.
+  // if we've been given a name instead of a rule block (from eg conform), look it up
   if (!_.isPlainObject(rule)) {
     if (!!this.rules[rule]) {
       rule = this.rules[rule];
@@ -48,15 +46,12 @@ Corro.prototype.evaluateObject = function (ctx, schema, object, key) {
   var self = this;
   var rules = [], children = [];
 
-  Object.keys(schema)
-    .filter(function (k) { return schema[k]; }) // skip stuff like required: false
-    .forEach(function (k) {
-      if (!_.isPlainObject(schema[k])) {
-        rules.push(k);
-      } else {
-        children.push(k);
-      }
-    });
+  for (var k in schema) {
+    if (schema.hasOwnProperty(k) && schema[k]) {    // skip stuff like required: false
+      if (!_.isPlainObject(schema[k])) { rules.push(k);}
+      else { children.push(k); }
+    }
+  }
 
   // run rules first, so we can exit early if we're missing required subobjects or have wrong types or whatever
   var result = rules.map(function (name) {
@@ -66,21 +61,28 @@ Corro.prototype.evaluateObject = function (ctx, schema, object, key) {
     };
   })
   .reduce(function (acc, r) {
-    var isCompound = r.result.length > 1;
+    var i = 0, len = r.result.length;
+    var name = r.name, rule = self.rules[r.name];
+    var row;
 
-    return r.result.reduce(function (acc, res, idx) {
-      if (!acc[key]) { acc[key] = []; }
+    if (len === 0) { return acc; }
 
-      var name = isCompound ? format('{}-{}', r.name, idx) : r.name;
-      var ruleResult = {rule: name, result: res};
-      if (!!self.rules[name] && self.rules[name].includeArgs !== false) {
-        ruleResult.args = schema[r.name];
+    acc[key] = acc[key] || [];
+
+    for (i; i < len; i++) {
+      row = {
+        rule: len === 1 ? name : format('{}-{}', r.name, i),
+        result: r.result[i]
+      };
+
+      if (!!rule && rule.includeArgs !== false) {
+        row.args = schema[r.name];
       }
 
-      acc[key].push(ruleResult);
+      acc[key].push(row);
+    }
 
-      return acc;
-    }, acc);
+    return acc;
   }, {});
 
   if (_.isArray(object) && children.length > 1) {
@@ -102,9 +104,11 @@ Corro.prototype.evaluateObject = function (ctx, schema, object, key) {
       }
     })
     .reduce(function (acc, arr) {
-      return arr.reduce(function (acc, res) { // bad form to hide it but it's literally the same thing
-        return _.merge(acc, res);
-      }, acc);
+      var i = 0, len = arr.length;
+
+      for (i; i < len; i++) { _.merge(acc, arr[i]); }
+
+      return acc;
     }, result);
   }
 

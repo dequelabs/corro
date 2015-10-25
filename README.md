@@ -8,6 +8,9 @@ Corro is a powerful, extensible validation framework for node.js.
 - [Corro](#corro)
 	- [Installation](#installation)
 	- [Usage/Example](#usageexample)
+		- [Notes](#notes)
+			- [Skipping Execution](#skipping-execution)
+			- [Arrays](#arrays)
 	- [Rules](#rules)
 	- [Built-In Rules](#built-in-rules)
 		- [conform](#conform)
@@ -22,7 +25,6 @@ Corro is a powerful, extensible validation framework for node.js.
 		- [type](#type)
 	- [Contributions](#contributions)
 	- [Acknowledgements](#acknowledgements)
-
 <!-- /TOC -->
 
 ## Installation
@@ -136,6 +138,13 @@ we get a more interesting result:
 ```
 
 ### Notes
+#### Skipping Execution
+When evaluating the schema, rules with falsy arguments will be passed over. This
+allows for conditionally or temporarily turning rules off by setting eg
+`required: false` instead of `required: true`, but also means that custom rules
+should always be phrased as positive expressions as construction such as
+`allowX: false` will never catch Xs that should not be present.
+
 #### Arrays
 Any key-value pair in a schema where the value is a plain Object is taken to
 represent a nested value in the validating document -- it's how "scores" is
@@ -223,7 +232,10 @@ Ensures that the value (strings only) is not empty or only whitespace.
 Verifies that the value is present in the supplied array.
 
 ### required
-Validates that the value is neither `null` nor `undefined`.
+Validates that the value is neither `null` nor `undefined`. You may supply
+either `true` or the name of another field (at the same level if your schema
+contains nested objects). In the latter case, the value may be null or undefined
+if and only if the dependency field's value is also null or undefined.
 
 ### type
 Checks that the value's type matches one of the following lowercase specifiers:
