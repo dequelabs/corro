@@ -202,6 +202,12 @@ describe('Corro', function () {
       assert.equal(errors.field[0].result, 'is required');
     });
 
+    it('should not execute rules with args=false', function () {
+      var errors = new Corro().evaluateObject({field: null}, {required: false}, null, 'field');
+
+      assert.lengthOf(Object.keys(errors), 0);
+    });
+
     it('should explode multiple result messages', function () {
       var errors = new Corro().evaluateObject({field: 'test'}, {
         conform: [{

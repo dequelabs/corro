@@ -44,7 +44,7 @@ Corro.prototype.evaluateObject = function (ctx, schema, object, name) {
   var self = this;
 
   return _.transform(schema, function (result, val, key) {
-    if (!_.isPlainObject(val)) {  // rule
+    if (!_.isPlainObject(val) && val !== false) {  // rule
       var res = {
         rule: key,
         result: self.runRule(ctx, key, object, val)
