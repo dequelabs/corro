@@ -196,9 +196,9 @@ recommended.
 ### conform
 Runs any number of custom rule functions against the value and compiles the
 results. Each member of the functions array must be a rule block as specified
-above. Failures will be indexed by their position in the rule array, so for
-example if the second rule fails the final result will be recorded as
-'conform-1'.
+above. If multiple conform rules are configured, failures will be indexed by 
+their position in the rule array, so for example if the second rule fails the 
+final result will be recorded as 'conform-1'.
 
 ### extension
 Ensures that the file's extension is in the provided array.
