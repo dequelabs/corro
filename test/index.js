@@ -245,6 +245,20 @@ describe('Corro', function () {
         assert.isUndefined(result.field[0].args);
     });
 
+    it('should let you evaluate rules on the root schema if you\'re willing to accept the consequences', function () {
+      var result = new Corro().evaluateObject(
+        {field1: [], field2: []},
+        {
+          conform: [{
+            func: function (val) { return val.field1.length > 0 || val.field2.length > 0; },
+            message: 'snail hatin'}
+          ]
+        },
+        {field1: [], field2: []});
+
+      assert.equal(result['undefined'][0].result, 'snail hatin');
+    });
+
     describe('recursion into object trees', function () {
       it('should validate nested objects', function () {
         var errors = new Corro().evaluateObject(
