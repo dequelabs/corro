@@ -39,46 +39,62 @@ Instantiate Corro and pass a schema and document to `validate()`.
 var Corro = require('corro');
 var corro = new Corro();
 var results = corro.validate({
-    username: {
-      required: true,     // must not be null or undefined
-      notEmpty: true,     // must not be empty or whitespace
-      minLength: 4,       // must be at least 4 characters long
-      maxLength: 20,      // must not be more than 20 characters long
-      match: /^[^\s]+$/   // must not contain any whitespace
-    }, email: {
-      required: true,
-      notEmpty: true,
-      format: 'email'     // must match a defined email format
-    }, bio: {
-      type: 'string',     // if supplied, must be a string
-      conform: [{         // runs all supplied functions
-        func: function (bio) {
-          return bio.indexOf('innovation') > 0;
-        },
-        message: 'not sufficiently disruptive to extant paradigms'
-      }]
-    }, scores: {
-      type: 'array',      // if supplied, must be an array
-      minLength: 3,       // if supplied, must contain 3 or more items
-      values: {           // see note about array handling
-        key: {
-          required: true,
-          notEmpty: true,
-          present: [      // must be a member of supplied array
-            'test 1',
-            'test 2',
-            'test 3'
-          ]
-        }, value: {
-          type: 'number', // must be a number
-          min: 0,         // must be greater than or equal to 0
-          max: 100        // must be less than or equal to 100
-        }
-      }
-    }
+		username: {
+			required: true,     // must not be null or undefined
+			notEmpty: true,     // must not be empty or whitespace
+			minLength: 4,       // must be at least 4 characters long
+			maxLength: 20,      // must not be more than 20 characters long
+			match: /^[^\s]+$/   // must not contain any whitespace
+		}, password: {
+			required: true,
+			minLength: 8,
+			equals: 'confirm',  // must equal the value of the other named field
+		}, email: {
+			required: true,
+			notEmpty: true,
+			format: 'email'     // must match a defined email format
+		}, bio: {
+			type: 'string',     // if supplied, must be a string
+			conform: [{         // runs all supplied functions
+				func: function (bio) {
+					return bio.indexOf('innovation') > 0;
+				},
+				message: 'not sufficiently disruptive to extant paradigms'
+			}]
+		}, scores: {
+			type: 'array',      // if supplied, must be an array
+			minLength: 3,       // if supplied, must contain 3 or more items
+			values: {           // see note about array handling
+				key: {
+					required: true,
+					notEmpty: true,
+					present: [      // must be a member of supplied array
+						'test 1',
+						'test 2',
+						'test 3'
+					]
+				}, value: {
+					type: 'number', // must be a number
+					min: 0,         // must be greater than or equal to 0
+					max: 100        // must be less than or equal to 100
+				}
+			}
+		}
   }, {
-    username: 'test',
-    email: 'test@example.org'
+		username: 'test',
+		password: 'supersecure',
+		confirm: 'supersecure',
+		email: 'test@example.org',
+		scores: [{
+			key: 'test 1',
+			value: 64
+		}, {
+			key: 'test 2',
+			value: 62
+		}, {
+			key: 'test 3',
+			value: 60
+		}]
   });
 ```
 
@@ -92,6 +108,8 @@ If we pass something that fails, such as
 ```JSON
 {
   "username": "",
+	"password": "supersecure",
+	"confirm": "stuporsickyear",
   "email": "test",
   "bio": "hello this is my bio",
   "scores": [{"key": "a test"}]
@@ -115,6 +133,11 @@ we get a more interesting result:
         "rule": "match",
         "result": "does not match supplied pattern"
       }],
+		"password": [{
+				"rule": "equals",
+				"result": "values are not equal",
+				"args": "confirm"
+		}],
     "email": [{
         "rule": "format",
         "result": "expected format email",
@@ -196,9 +219,13 @@ recommended.
 ### conform
 Runs any number of custom rule functions against the value and compiles the
 results. Each member of the functions array must be a rule block as specified
-above. If multiple conform rules are configured, failures will be indexed by 
-their position in the rule array, so for example if the second rule fails the 
+above. If multiple conform rules are configured, failures will be indexed by
+their position in the rule array, so for example if the second rule fails the
 final result will be recorded as 'conform-1'.
+
+### equals
+Checks the value against the value of the named field (at the same schema level,
+if you're validating nested objects). Useful for eg password confirmation.
 
 ### extension
 Ensures that the file's extension is in the provided array.
@@ -245,6 +272,13 @@ Checks that the value's type matches one of the following lowercase specifiers:
 * **string**
 * **number**
 * **date**
+* **json**
+
+Some values will pass multiple type validators:
+* Numbers are valid Dates and also valid JSON.
+* Plain Objects are considered valid JSON.
+* Dates count as Objects.
+* Parseable stringified JSON obviously counts both as a string and as JSON.
 
 ## Contributions
 This is a spare-time project so I can't promise immediate feedback, but issues and especially pull requests are welcome!

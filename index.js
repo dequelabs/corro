@@ -23,12 +23,13 @@ Corro.prototype.runRule = function (ctx, rule, val, args) {
   }
 
   if (rule.alwaysRun || (val !== null && val !== undefined)) {
+    if (args === undefined) { args = []; }
     if (rule.argArray) { args = [args]; }
 
     var result = rule.func.apply({
       runRule: this.runRule,
       context: ctx
-    }, [val].concat(args || []));
+    }, [val].concat(args));
 
     if (_.isBoolean(result) && !result) {
       return [format.apply(this, [rule.message].concat(args))];

@@ -77,6 +77,28 @@ describe('rules', function () {
     });
   });
 
+  describe('equals', function () {
+    var rule = rules.equals;
+
+    it('should pass values which are equal', function () {
+      var ctx = {
+        passwordField: 'my password',
+        confirmField: 'my password'
+      };
+
+      assert.isTrue(rule.func.apply({context: ctx}, ['my password', 'confirmField']));
+    });
+
+    it('should fail values which are not equal', function () {
+      var ctx = {
+        passwordField: 'my password',
+        confirmField: 'mu oassword'
+      };
+
+      assert.isFalse(rule.func.apply({context: ctx}, ['my password', 'confirmField']));
+    });
+  });
+
   describe('extension', function () {
     var rule = rules.extension;
 
@@ -438,22 +460,25 @@ describe('rules', function () {
       assert.isFalse(rule.func('abc', 'object'));
       assert.isFalse(rule.func('abc', 'array'));
       assert.isFalse(rule.func('abc', 'date'));
+      assert.isFalse(rule.func('abc', 'json'));
     });
 
-    it('should validate numbers as numbers (but also dates because technically)', function () {
+    it('should validate numbers as numbers (but also dates and json because technically)', function () {
       assert.isFalse(rule.func(1, 'string'));
       assert.isTrue(rule.func(1, 'number'));
       assert.isFalse(rule.func(1, 'object'));
       assert.isFalse(rule.func(1, 'array'));
       assert.isTrue(rule.func(1, 'date'));
-    });
+      assert.isTrue(rule.func(1, 'json'));
+  });
 
-    it('should validate objects only as objects', function () {
+    it('should validate objects as objects and as json', function () {
       assert.isFalse(rule.func({field: 'value'}, 'string'));
       assert.isFalse(rule.func({field: 'value'}, 'number'));
       assert.isTrue(rule.func({field: 'value'}, 'object'));
       assert.isFalse(rule.func({field: 'value'}, 'array'));
       assert.isFalse(rule.func({field: 'value'}, 'date'));
+      assert.isTrue(rule.func({field: 'value'}, 'json'));
     });
 
     it('should validate arrays only as arrays', function () {
@@ -462,6 +487,7 @@ describe('rules', function () {
       assert.isFalse(rule.func(['abc'], 'object'));
       assert.isTrue(rule.func(['abc'], 'array'));
       assert.isFalse(rule.func(['abc'], 'date'));
+      assert.isFalse(rule.func(['abc'], 'json'));
     });
 
     it('should validate dates as dates (but also objects because technically)', function () {
@@ -470,6 +496,16 @@ describe('rules', function () {
       assert.isTrue(rule.func(new Date(), 'object'));
       assert.isFalse(rule.func(new Date(), 'array'));
       assert.isTrue(rule.func(new Date(), 'date'));
+      assert.isFalse(rule.func(new Date(), 'json'));
+    });
+
+    it('should validate stringified json as json (and also strings)', function () {
+      assert.isTrue(rule.func('{"field": "value"}', 'string'));
+      assert.isFalse(rule.func('{"field": "value"}', 'number'));
+      assert.isFalse(rule.func('{"field": "value"}', 'object'));
+      assert.isFalse(rule.func('{"field": "value"}', 'array'));
+      assert.isFalse(rule.func('{"field": "value"}', 'date'));
+      assert.isTrue(rule.func('{"field": "value"}', 'json'));
     });
   });
 });
