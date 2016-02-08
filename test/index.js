@@ -552,6 +552,9 @@ describe('Corro', function () {
                 max: 100        // must be less than or equal to 100
               }
             }
+          }, terms: {
+            required: true,
+            value: 'yes'        // if present, must be 'yes'
           }
         }, {
           username: '',
@@ -559,6 +562,7 @@ describe('Corro', function () {
           confirm: 'stuporsickyear',
           email: 'test',
           bio: 'hello this is my bio',
+          terms: 'no',
           scores: [{key: 'a test'}]
         });
 
@@ -599,7 +603,12 @@ describe('Corro', function () {
               rule: 'present',
               result: 'not in allowed values',
               args: [ 'test 1', 'test 2', 'test 3' ]
-            }]
+            }],
+          terms: [{
+              args: 'yes',
+              rule: 'value',
+              result: 'expected yes'
+          }]
         }
       });
     });
@@ -647,12 +656,16 @@ describe('Corro', function () {
                 max: 100        // must be less than or equal to 100
               }
             }
+          }, terms: {
+            required: true,
+            value: 'yes'        // if present, must be 'yes'
           }
         }, {
           username: 'test',
           password: 'supersecure',
           confirm: 'supersecure',
           email: 'test@example.org',
+          terms: 'yes',
           scores: [{
             key: 'test 1',
             value: 64

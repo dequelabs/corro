@@ -24,6 +24,7 @@ Corro is a powerful, extensible validation framework for node.js.
     - [present](#present)
     - [required](#required)
     - [type](#type)
+    - [value](#value)
   - [Contributions](#contributions)
   - [Acknowledgements](#acknowledgements)
 
@@ -80,12 +81,16 @@ var results = corro.validate({
           max: 100        // must be less than or equal to 100
         }
       }
+    }, terms: {
+      required: true,
+      value: 'yes'        // if present, must be 'yes'
     }
   }, {
     username: 'test',
     password: 'supersecure',
     confirm: 'supersecure',
     email: 'test@example.org',
+    terms: 'yes',
     scores: [{
       key: 'test 1',
       value: 64
@@ -112,6 +117,7 @@ If we pass something that fails, such as
   "password": "supersecure",
   "confirm": "stuporsickyear",
   "email": "test",
+  "terms": "no",
   "bio": "hello this is my bio",
   "scores": [{"key": "a test"}]
 }
@@ -157,7 +163,12 @@ we get a more interesting result:
         "rule": "present",
         "result": "not in allowed values",
         "args": [ "test 1", "test 2", "test 3" ]
-      }]
+      }],
+    "terms": [{
+        "args": "yes",
+        "rule": "value",
+        "result": "expected yes"
+    }]
   }
 }
 ```
@@ -280,6 +291,9 @@ Some values will pass multiple type validators:
 * Plain Objects are considered valid JSON.
 * Dates count as Objects.
 * Parseable stringified JSON obviously counts both as a string and as JSON.
+
+### value
+If present, the value must be strictly equal to the provided argument.
 
 ## Contributions
 This is a spare-time project so I can't promise immediate feedback, but issues and especially pull requests are welcome!
