@@ -508,4 +508,16 @@ describe('rules', function () {
       assert.isTrue(rule.func('{"field": "value"}', 'json'));
     });
   });
+
+  describe('value', function () {
+    var rule = rules.value;
+
+    it('should pass matching values', function () {
+      assert.isTrue(rule.func('value', 'value'));
+    });
+
+    it('should fail mismatching values', function () {
+      assert.isFalse(rule.func('value', 'eulav'));
+    });
+  });
 });
