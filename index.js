@@ -11,7 +11,7 @@ var Corro = function (rules) {
   var defaults = fs.readdirSync('./lib/rules')
     .filter(function (file) { return file.match(/\.js$/); })
     .reduce(function (acc, file) {
-      acc[path.parse(file).name] = require(path.resolve('./lib/rules', file));
+      acc[path.basename(file, '.js')] = require(path.resolve('./lib/rules', file));
 
       return acc;
     }, {});
