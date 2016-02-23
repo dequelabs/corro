@@ -1,11 +1,20 @@
 'use strict';
 
 var _ = require('lodash');
+var fs = require('fs');
 var format = require('string-format');
-var defaults = require('./lib/rules');
+var path = require('path');
 
 var Corro = function (rules) {
   this.rules = rules || {};
+
+  var defaults = fs.readdirSync('./lib/rules')
+    .filter(function (file) { return file.match(/\.js$/); })
+    .reduce(function (acc, file) {
+      acc[path.parse(file).name] = require(path.resolve('./lib/rules', file));
+
+      return acc;
+    }, {});
 
   _.merge(this.rules, defaults, function (customRule) { // 2nd param is defaultRule but we always go with custom
     return customRule;
@@ -26,7 +35,9 @@ Corro.prototype.runRule = function (ctx, rule, val, args) {
     if (args === undefined) { args = []; }
     if (rule.argArray) { args = [args]; }
 
-    var result = rule.func.apply({
+    var func = rule.func || rule;   // for custom rule blocks
+
+    var result = func.apply({
       runRule: this.runRule,
       context: ctx
     }, [val].concat(args));
