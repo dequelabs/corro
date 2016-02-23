@@ -31,9 +31,9 @@ describe('format', function () {
     assert.isTrue(rule('http://www.test.com/page(wikistyle)', 'url'));
     assert.isTrue(rule('http://www.test.com/?querystring=with+stuff&other=things', 'url'));
     assert.isTrue(rule('http://www.test.com/page-with?querystring=with+stuff&other=things', 'url'));
+    assert.isTrue(rule('http://www.test.com?querystring+with+empty+path', 'url'));
 
     // sanity check:
-    assert.isFalse(rule('http://www.test.com?querystring=with+stuff&other=things', 'url'));  // no qs on hostname!
     assert.isFalse(rule('hello', 'url'));
     assert.isFalse(rule('there\'s a lot of stuff that isn\'t a url honestly', 'url'));
   });
