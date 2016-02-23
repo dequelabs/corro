@@ -1,9 +1,9 @@
 'use strict';
 
 var assert = require('chai').assert;
-var rule = require('../../../lib/rules/present.js');
+var rule = require('../../../lib/rules/any.js');
 
-describe('present', function () {
+describe('any', function () {
   it('should take array args', function () {
     assert.isTrue(rule.argArray);
   });

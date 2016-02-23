@@ -11,8 +11,11 @@ Corro is a powerful, extensible validation framework for node.js.
     - [Notes](#notes)
       - [Skipping Execution](#skipping-execution)
       - [Arrays](#arrays)
+      - [Evaluating the Root Context](#evaluating-the-root-context)
   - [Rules](#rules)
   - [Built-In Rules](#built-in-rules)
+    - [any/none](#anynone)
+    - [anyField](#anyfield)
     - [conform](#conform)
     - [equals](#equals)
     - [extension](#extension)
@@ -20,8 +23,8 @@ Corro is a powerful, extensible validation framework for node.js.
     - [match](#match)
     - [max/min](#maxmin)
     - [maxLength/minLength](#maxlengthminlength)
+    - [notDefined](#notdefined)
     - [notEmpty](#notempty)
-    - [present](#present)
     - [required](#required)
     - [type](#type)
     - [value](#value)
@@ -70,7 +73,7 @@ var results = corro.validate({
         key: {
           required: true,
           notEmpty: true,
-          present: [      // must be a member of supplied array
+          any: [          // must be a member of supplied array
             'test 1',
             'test 2',
             'test 3'
@@ -160,7 +163,7 @@ we get a more interesting result:
         "args": 3
       }],
     "scores.0.key": [{
-        "rule": "present",
+        "rule": "any",
         "result": "not in allowed values",
         "args": [ "test 1", "test 2", "test 3" ]
       }],
@@ -192,6 +195,15 @@ Values representing arrays of objects should contain **only one** non-rule key
 whose value represents the schema for elements in the array. There isn't
 anything preventing you from passing multiple definitions, and Corro will apply
 each of them in turn and safely merge the results, but it can't be recommended.
+
+#### Evaluating the Root Context
+In certain cases it may be necessary to evaluate rules on the original object
+passed in -- in particular, [anyField](#anyfield) is intended to process
+objects in the first place, and [conform](#conform) can do pretty much anything.
+While validation messages from nested contexts are recorded against a
+dot-separated path to each respective context, the original object _has_ no such
+path. Corro records validation messages raised against the root context with the
+key "\*".
 
 ## Rules
 Corro ships with a small but flexible set of rules, and you can extend it with
@@ -227,6 +239,31 @@ contains the following fields:
 ## Built-In Rules
 Checking the `lib/rules` testcases for more in-depth documentation is highly
 recommended.
+
+### any/none
+Verifies that the value is present in (any) or absent from (none) the supplied
+array.
+
+### anyField
+Given an array of field names followed by a value in the form
+`['field1', 'field2', ..., 'fieldN', 'myValue']`, this rule tests the specified
+fields at the current context level and only passes if at least one has the
+given value.
+
+```
+new Corro().validate({
+  anyField: ['field1', 'field2', 'field3', 'value']
+}, {
+  field1: 'one',
+  field2: 'two',
+  field3: 'value'
+})
+```
+
+Note that this example is evaluating the rule on the root context, or the
+original object passed in -- meaning that if validation were to fail, the
+circumstances described in
+[Evaluating the Root Context](#evaluating-the-root-context) apply.
 
 ### conform
 Runs any number of custom rule functions against the value and compiles the
@@ -265,11 +302,11 @@ threshold.
 Verifies that the length of the value (string or Array) is below or above the
 supplied maximum or minimum threshold.
 
+### notDefined
+Tests whether the value is defined or not. Only passes `undefined` values.
+
 ### notEmpty
 Ensures that the value (strings only) is not empty or only whitespace.
-
-### present
-Verifies that the value is present in the supplied array.
 
 ### required
 Validates that the value is neither `null` nor `undefined`. You may supply

@@ -69,6 +69,8 @@ Corro.prototype.evaluateObject = function (ctx, schema, object, name) {
 
         var formatStr = len > 1 ? '{}-{}' : '{}';
 
+        name = name || '*';   // nicer than "undefined" as a key for results on the root context
+
         result[name] = (result[name] || []).concat(res.result.map(function (r, idx) {
           res.rule = format(formatStr, key, idx);
           res.result = r;

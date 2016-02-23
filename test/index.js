@@ -245,18 +245,16 @@ describe('Corro', function () {
         assert.isUndefined(result.field[0].args);
     });
 
-    it('should let you evaluate rules on the root schema if you\'re willing to accept the consequences', function () {
+    it('should evaluate rules against the root schema', function () {
       var result = new Corro().evaluateObject(
-        {field1: [], field2: []},
+        {field1: 'value1', field2: 'value2'},
         {
-          conform: [{
-            func: function (val) { return val.field1.length > 0 || val.field2.length > 0; },
-            message: 'snail hatin'}
-          ]
+          anyField: ['field1', 'field2', 'value3']
         },
-        {field1: [], field2: []});
+        {field1: 'value1', field2: 'value2'}
+      );
 
-      assert.equal(result['undefined'][0].result, 'snail hatin');
+      assert.equal(result['*'][0].result, 'value not contained in any specified field');
     });
 
     describe('recursion into object trees', function () {
@@ -541,7 +539,7 @@ describe('Corro', function () {
               key: {
                 required: true,
                 notEmpty: true,
-                present: [      // must be a member of supplied array
+                any: [      // must be a member of supplied array
                   'test 1',
                   'test 2',
                   'test 3'
@@ -600,7 +598,7 @@ describe('Corro', function () {
               args: 3
             }],
           'scores.0.key': [{
-              rule: 'present',
+              rule: 'any',
               result: 'not in allowed values',
               args: [ 'test 1', 'test 2', 'test 3' ]
             }],
@@ -645,7 +643,7 @@ describe('Corro', function () {
               key: {
                 required: true,
                 notEmpty: true,
-                present: [      // must be a member of supplied array
+                any: [          // must be a member of supplied array
                   'test 1',
                   'test 2',
                   'test 3'
