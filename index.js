@@ -6,12 +6,13 @@ var format = require('string-format');
 var path = require('path');
 
 var Corro = function (rules) {
+  var ruleDir = path.join(__dirname, 'lib/rules');
   this.rules = rules || {};
 
-  var defaults = fs.readdirSync('./lib/rules')
+  var defaults = fs.readdirSync(ruleDir)
     .filter(function (file) { return file.match(/\.js$/); })
     .reduce(function (acc, file) {
-      acc[path.basename(file, '.js')] = require(path.resolve('./lib/rules', file));
+      acc[path.basename(file, '.js')] = require(path.resolve(ruleDir, file));
 
       return acc;
     }, {});
