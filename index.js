@@ -17,9 +17,7 @@ var Corro = function (rules) {
       return acc;
     }, {});
 
-  _.merge(this.rules, defaults, function (customRule) { // 2nd param is defaultRule but we always go with custom
-    return customRule;
-  });
+  this.rules = _.assign(defaults, this.rules);
 
   return this;
 };
@@ -82,7 +80,7 @@ Corro.prototype.evaluateObject = function (ctx, schema, object, name) {
     } else if (!!object) {  // child object
       if (_.isArray(object)) {
         return object.map(function (element, idx) {
-          _.merge(
+          _.mergeWith(
             result,
             self.evaluateObject(object, val, element, name + '.' + idx),
             function (a, b) {

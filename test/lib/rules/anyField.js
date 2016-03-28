@@ -28,4 +28,11 @@ describe('anyField', function () {
   it('should fail if none of the specified fields have the specified value', function () {
     assert.isFalse(rule.apply(ctx, ['this is ignored', ['field1', 'field2', 'field3', 'value4']]));
   });
+
+  it('should not mutate the array', function () {
+    var arr = ['field1', 'field2', 'field3', 'value3'];
+
+    assert.isTrue(rule.apply(ctx, ['this is ignored', arr]));
+    assert.isTrue(rule.apply(ctx, ['this is ignored', arr]));
+  });
 });
