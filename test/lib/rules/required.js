@@ -4,8 +4,12 @@ var assert = require('chai').assert;
 var rule = require('../../../lib/rules/required.js');
 
 describe('required', function () {
-  it('should evaluate null and undefined values', function () {
-    assert.isTrue(rule.alwaysRun);
+  it('should evaluate null values', function () {
+    assert.isTrue(rule.evaluateNull);
+  });
+
+  it('should evaluate undefined values', function () {
+    assert.isTrue(rule.evaluateUndefined);
   });
 
   it('should not include arguments in the result', function () {

@@ -22,6 +22,12 @@ var Corro = function (rules) {
   return this;
 };
 
+function shouldRun(rule, val, args) {
+  return (rule.evaluateNull || val !== null) &&
+    (rule.evaluateUndefined || val !== undefined) &&
+    (rule.alwaysRun || args !== false);
+}
+
 Corro.prototype.runRule = function (ctx, rule, val, args) {
   // if we've been given a name instead of a rule block (from eg conform), look it up
   if (!_.isPlainObject(rule)) {
@@ -30,7 +36,7 @@ Corro.prototype.runRule = function (ctx, rule, val, args) {
     if (!rule) { return ['invalid rule specified']; }
   }
 
-  if (rule.alwaysRun || (val !== null && val !== undefined)) {
+  if (shouldRun(rule, val, args)) {
     if (args === undefined) { args = []; }
     if (rule.argArray) { args = [args]; }
 
@@ -51,20 +57,20 @@ Corro.prototype.runRule = function (ctx, rule, val, args) {
   return [];
 };
 
-Corro.prototype.evaluateObject = function (ctx, schema, object, name) {
+Corro.prototype.evaluateObject = function (ctx, schema, val, name) {
   var self = this;
 
-  return _.transform(schema, function (result, val, key) {
-    if (!_.isPlainObject(val) && val !== false) {  // rule
+  return _.transform(schema, function (result, args, key) {
+    if (!_.isPlainObject(args)) {  // rule
       var res = {
         rule: key,
-        result: self.runRule(ctx, key, object, val)
+        result: self.runRule(ctx, key, val, args)
       };
 
       var len = res.result.length;
 
       if (len > 0) {
-        if (self.rules[key].includeArgs !== false) { res.args = val; }
+        if (self.rules[key].includeArgs !== false) { res.args = args; }
 
         var formatStr = len > 1 ? '{}-{}' : '{}';
 
@@ -77,12 +83,12 @@ Corro.prototype.evaluateObject = function (ctx, schema, object, name) {
           return _.clone(res);
         }));
       }
-    } else if (!!object) {  // child object
-      if (_.isArray(object)) {
-        return object.map(function (element, idx) {
+    } else if (!!val) {  // child object
+      if (_.isArray(val)) {
+        return val.map(function (element, idx) {
           _.mergeWith(
             result,
-            self.evaluateObject(object, val, element, name + '.' + idx),
+            self.evaluateObject(val, args, element, name + '.' + idx),
             function (a, b) {
               if (_.isArray(a)) { return a.concat(b); } // merge all results if multiple subschemata provided
               return b;
@@ -91,7 +97,7 @@ Corro.prototype.evaluateObject = function (ctx, schema, object, name) {
       } else {
         var child = name ? name + '.' + key : key;
 
-        _.merge(result, self.evaluateObject(object, val, object[key], child));
+        _.merge(result, self.evaluateObject(val, args, val[key], child));
       }
     }
   });

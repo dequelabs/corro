@@ -49,40 +49,57 @@ describe('Corro', function () {
     });
 
     it('should return the rule message on failure', function () {
-      assert.deepEqual(new Corro().runRule({field: false}, {
-        func: function (val) { return !!val; },
+      assert.deepEqual(new Corro().runRule({field: 'value'}, {
+        func: function () { return false; },
         message: 'message'
-      }, false), ['message']);
+      }, 'value'), ['message']);
     });
 
-    it('should not execute rules without alwaysRun on null values', function () {
-      assert.lengthOf(new Corro().runRule({field: null}, {
-        func: function (val) { return val !== null; },
+    it('should not execute rules with args=false', function () {
+      assert.lengthOf(new Corro().runRule({field: 'value'}, {
+        func: function (val) { return val !== 'value'; },
         message: 'message'
-      }, null), 0);
+      }, 'value', false), 0);
     });
 
-    it('should execute rules with alwaysRun on null values', function () {
-      assert.deepEqual(new Corro().runRule({field: null}, {
-        func: function (val) { return val !== null; },
-        alwaysRun: true,
-        message: 'message'
-      }, null), ['message']);
+    it('should execute rules with args=false if alwaysRun is set', function () {
+      assert.lengthOf(new Corro().runRule({field: 'value'}, {
+        func: function (val) { return val !== 'value'; },
+        message: 'message',
+        alwaysRun: true
+      }, 'value', false), 1);
     });
 
-    it('should not execute rules without alwaysRun on undefined values', function () {
-      assert.lengthOf(new Corro().runRule({}, {
-        func: function (val) { return val !== undefined; },
-        message: 'message'
-      }), 0);
-    });
+    describe('pre-execution value checks', function () {
+      it('should not execute rules without evaluateNull on null values', function () {
+        assert.lengthOf(new Corro().runRule({field: null}, {
+          func: function (val) { return val !== null; },
+          message: 'message'
+        }, null), 0);
+      });
 
-    it('should execute rules with alwaysRun on undefined values', function () {
-      assert.deepEqual(new Corro().runRule({}, {
-        func: function (val) { return val !== undefined; },
-        alwaysRun: true,
-        message: 'message'
-      }), ['message']);
+      it('should execute rules with evaluateNull on null values', function () {
+        assert.deepEqual(new Corro().runRule({field: null}, {
+          func: function (val) { return val !== null; },
+          evaluateNull: true,
+          message: 'message'
+        }, null), ['message']);
+      });
+
+      it('should not execute rules without evaluateUndefined on undefined values', function () {
+        assert.lengthOf(new Corro().runRule({}, {
+          func: function (val) { return val !== undefined; },
+          message: 'message'
+        }), 0);
+      });
+
+      it('should execute rules with evaluateUndefined on undefined values', function () {
+        assert.deepEqual(new Corro().runRule({}, {
+          func: function (val) { return val !== undefined; },
+          evaluateUndefined: true,
+          message: 'message'
+        }), ['message']);
+      });
     });
 
     describe('rules passed as names', function () {
@@ -200,12 +217,6 @@ describe('Corro', function () {
       assert.lengthOf(Object.keys(errors), 1);
       assert.equal(errors.field[0].rule, 'required');
       assert.equal(errors.field[0].result, 'is required');
-    });
-
-    it('should not execute rules with args=false', function () {
-      var errors = new Corro().evaluateObject({field: null}, {required: false}, null, 'field');
-
-      assert.lengthOf(Object.keys(errors), 0);
     });
 
     it('should explode multiple result messages', function () {

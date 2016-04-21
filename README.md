@@ -178,11 +178,15 @@ we get a more interesting result:
 
 ### Notes
 #### Skipping Execution
-When evaluating the schema, rules with falsy arguments will be passed over. This
-allows for conditionally or temporarily turning rules off by setting eg
-`required: false` instead of `required: true`, but also means that custom rules
-should always be phrased as positive expressions, since constructions such as
-`allowX: false` will never execute.
+When evaluating the schema, all rules with falsy arguments will be passed over
+_unless_ they have `alwaysRun` set. This allows for conditionally or temporarily
+turning rules off by setting eg `required: false` instead of `required: true`,
+but also means that custom rules should generally be phrased as positive
+expressions, since unless `alwaysRun` is on (which may sometimes lead to
+undesirable behavior), constructions such as `allowX: false` will never execute.
+
+Currently the only built-in rule with this setting is `value`, which needs to
+test explicitly `false` values.
 
 #### Arrays
 Any key-value pair in a schema where the value is a plain Object is taken to
@@ -225,12 +229,18 @@ contains the following fields:
   defined in your _schema_, and that the value under test will never be
   interpolated.
 
-**alwaysRun**: True to evaluate even null and undefined values, which are
-  otherwise skipped.
+**alwaysRun**: If this is true, this rule can never be turned off by setting
+  `{rulename: false}` in your schema.
 
 **argArray**: True if you don't want the executor to break up your schema args
   when it invokes your function, and instead want a single argument array to be
   passed in.
+
+**evaluateNull**: True to execute the rule even when the value under test is
+  `null`.
+
+**evaluateUndefined**: True to execute the rule even when the value under test
+  is `undefined`.
 
 **includeArgs**: By default, schema args are included in the results object to
   allow custom interpolation after validation. If includeArgs is both present
@@ -330,10 +340,13 @@ Some values will pass multiple type validators:
 * Parseable stringified JSON obviously counts both as a string and as JSON.
 
 ### value
-If present, the value must be strictly equal to the provided argument.
+If present, the value must be strictly equal to the provided argument. This rule
+runs even when its schema argument is `false`, which turns other rules off.
 
 ## Contributions
-This is a spare-time project so I can't promise immediate feedback, but issues and especially pull requests are welcome!
+This is a spare-time project so I can't promise immediate feedback, but issues
+and especially pull requests are welcome!
 
 ## Acknowledgements
-I'd be remiss if I didn't at least mention revalidator, which inspired a lot of the general approach to Corro.
+I'd be remiss if I didn't at least mention revalidator, which inspired a lot of
+the general approach to Corro.
