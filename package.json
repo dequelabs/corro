@@ -1,6 +1,6 @@
 {
   "name": "corro",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "A powerful, extensible validation framework for node.js",
   "keywords": [
     "validation",
