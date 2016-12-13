@@ -40,6 +40,11 @@ Via NPM: `npm install corro`
 
 Instantiate Corro and pass a schema and document to `validate()`.
 
+The schema is a JSON object containing keys which may indicate rules or nested
+schemata (if the corresponding value is an object). Rules are applied to the
+document; subschemata are recursively applied to the property of the document
+corresponding to their keys.
+
 ```javascript
 var Corro = require('corro');
 var corro = new Corro();
