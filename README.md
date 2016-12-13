@@ -23,6 +23,7 @@ Corro is a powerful, extensible validation framework for node.js.
     - [match](#match)
     - [max/min](#maxmin)
     - [maxLength/minLength](#maxlengthminlength)
+    - [not](#not)
     - [notDefined](#notdefined)
     - [notEmpty](#notempty)
     - [required](#required)
@@ -317,6 +318,11 @@ threshold.
 Verifies that the length of the value (string or Array) is below or above the
 supplied maximum or minimum threshold.
 
+### not
+If defined, the value must _not_ be equal to the schema argument (the opposite
+of the [value](#value) rule). This rule will always run, even if its schema
+argument is `false`.
+
 ### notDefined
 Tests whether the value is defined or not. Only passes `undefined` values.
 
@@ -345,7 +351,7 @@ Some values will pass multiple type validators:
 * Parseable stringified JSON obviously counts both as a string and as JSON.
 
 ### value
-If present, the value must be strictly equal to the provided argument. This rule
+If defined, the value must be strictly equal to the provided argument. This rule
 runs even when its schema argument is `false`, which turns other rules off.
 
 ## Contributions
