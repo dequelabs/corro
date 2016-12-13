@@ -13,24 +13,22 @@ describe('not', function () {
   });
 
   it('should have a message', function () {
-    assert.equal(rule.message, 'values are equal');
+    assert.equal(rule.message, 'expected anything but {0}');
   });
 
-  it('should pass values which are not equal', function () {
-    var ctx = {
-      passwordField: 'my password',
-      confirmField: 'not my password'
-    };
-
-    assert.isTrue(rule.apply({context: ctx}, ['my password', 'confirmField']));
+  it('should pass mismatching values', function () {
+    assert.isTrue(rule('value', 'eulav'));
+    assert.isTrue(rule(1, 2));
+    assert.isTrue(rule(true, false));
+    assert.isTrue(rule(true, undefined));
+    assert.isTrue(rule(true, null));
   });
 
-  it('should fail values which are equal', function () {
-    var ctx = {
-      passwordField: 'my password',
-      confirmField: 'my password'
-    };
-
-    assert.isFalse(rule.apply({context: ctx}, ['my password', 'confirmField']));
+  it('should fail matching values', function () {
+    assert.isFalse(rule('value', 'value'));
+    assert.isFalse(rule(1, 1));
+    assert.isFalse(rule(true, true));
+    assert.isFalse(rule(null, null));
+    assert.isFalse(rule());
   });
 });
