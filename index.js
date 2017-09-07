@@ -1,23 +1,12 @@
 'use strict';
 
 var _ = require('lodash');
-var fs = require('fs');
+var defaults = require('./lib/rules');
 var format = require('string-format');
-var path = require('path');
 
 var Corro = function (rules) {
-  var ruleDir = path.join(__dirname, 'lib/rules');
-  this.rules = rules || {};
-
-  var defaults = fs.readdirSync(ruleDir)
-    .filter(function (file) { return file.match(/\.js$/); })
-    .reduce(function (acc, file) {
-      acc[path.basename(file, '.js')] = require(path.resolve(ruleDir, file));
-
-      return acc;
-    }, {});
-
-  this.rules = _.assign(defaults, this.rules);
+  rules = rules || {};
+  this.rules = _.assign({}, defaults, rules);
 
   return this;
 };
