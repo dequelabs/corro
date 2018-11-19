@@ -1,12 +1,17 @@
 'use strict';
 
-var _ = require('lodash');
 var defaults = require('./lib/rules');
+var isPlainObject = require('lodash.isplainobject');
+var isBoolean = require('lodash.isboolean');
+var transform = require('lodash.transform');
+var mergeWith = require('lodash.mergewith');
+var merge = require('lodash.merge');
+var clone = require('lodash.clone');
 var format = require('string-format');
 
 var Corro = function (rules) {
   rules = rules || {};
-  this.rules = _.assign({}, defaults, rules);
+  this.rules = Object.assign({}, defaults, rules);
 
   return this;
 };
@@ -19,7 +24,7 @@ function shouldRun(rule, val, args) {
 
 Corro.prototype.runRule = function (ctx, rule, val, args) {
   // if we've been given a name instead of a rule block (from eg conform), look it up
-  if (!_.isPlainObject(rule)) {
+  if (!isPlainObject(rule)) {
     rule = this.rules[rule];
 
     if (!rule) { return ['invalid rule specified']; }
@@ -36,9 +41,9 @@ Corro.prototype.runRule = function (ctx, rule, val, args) {
       context: ctx
     }, [val].concat(args));
 
-    if (_.isBoolean(result) && !result) {
+    if (isBoolean(result) && !result) {
       return [format.apply(this, [rule.message].concat(args))];
-    } else if (_.isArray(result)) { // message array from conform
+    } else if (Array.isArray(result)) { // message array from conform
       return result;
     }
   }
@@ -49,8 +54,8 @@ Corro.prototype.runRule = function (ctx, rule, val, args) {
 Corro.prototype.evaluateObject = function (ctx, schema, val, name) {
   var self = this;
 
-  return _.transform(schema, function (result, args, key) {
-    if (!_.isPlainObject(args)) {  // rule
+  return transform(schema, function (result, args, key) {
+    if (!isPlainObject(args)) {  // rule
       var res = {
         rule: key,
         result: self.runRule(ctx, key, val, args)
@@ -69,24 +74,24 @@ Corro.prototype.evaluateObject = function (ctx, schema, val, name) {
           res.rule = format(formatStr, key, idx);
           res.result = r;
 
-          return _.clone(res);
+          return clone(res);
         }));
       }
     } else if (!!val) {  // child object
-      if (_.isArray(val)) {
+      if (Array.isArray(val)) {
         return val.map(function (element, idx) {
-          _.mergeWith(
+          mergeWith(
             result,
             self.evaluateObject(val, args, element, name + '.' + idx),
             function (a, b) {
-              if (_.isArray(a)) { return a.concat(b); } // merge all results if multiple subschemata provided
+              if (Array.isArray(a)) { return a.concat(b); } // merge all results if multiple subschemata provided
               return b;
             });
         });
       } else {
         var child = name ? name + '.' + key : key;
 
-        _.merge(result, self.evaluateObject(val, args, val[key], child));
+        merge(result, self.evaluateObject(val, args, val[key], child));
       }
     }
   });
